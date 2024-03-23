@@ -31,17 +31,16 @@ export default function useGoogleSheets() {
   const data = useMemo(() => {
     if (googleSheetsData) {
       const headers = googleSheetsData[0];
-  
+      const rows = googleSheetsData.slice(1).reverse();
       const result: DataRow[] = [];
   
-      for (let i = 1; i < googleSheetsData.length; i++) {
-        const row = googleSheetsData[i];
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
         const obj: DataRow = {};
 
         for (let j = 0; j < headers.length; j++) {
-            obj[headers[j].toLowerCase()] = row[j];
+          obj[headers[j].toLowerCase()] = row[j];
         }
-
         result.push(obj);
       }
   

@@ -9,21 +9,16 @@ export default function Home() {
   return (
     <div className="mt-1 flex flex-row space-x-2">
       {data?.map((row, index) => (
-        <div key={index} className="card w-full bg-base-100 shadow-xl" onClick={() => console.log('clicked')}>
+        <div key={index} className="card p-4 w-[500px] h-36 bg-accent shadow-xl space-y-2" onClick={() => console.log('clicked')}>
           {/* <div className="">
             {row.image && (
               <figure><Image src={row.image} alt={`${row.course} Image`} width={500} height={100} /></figure>
             )}
           </div> */}
-          <div className="card-body">
-            <div className="flex flex-row">
-              <h2 className="card-title">
-                {row.tournament} @ {row.course}
-              </h2>
-              {index === data.length - 1 && <div className="badge badge-secondary">NEW</div>}
-            </div>
-            <p>{row.description}</p>
-          </div>
+          <h2 className="card-title">
+            <span>{row.tournament} @ {row.course} {index === 0 && <span className="badge badge-secondary">NEW</span>}</span>
+          </h2>
+          <p>{row.description}</p>
         </div>
       ))}
     </div>
