@@ -9,7 +9,7 @@ export default function useGoogleSheets() {
   const getGoogleSheetsData = async () => {
     const sheetId = '13KE6j122Muoo-mTZ-wjM6CTySMnWbquaiJRT67am-nw';
     const apiKey = process.env.GOOGLE_SHEETS_API_KEY;
-    const range = 'Sheet1!A:D';
+    const range = 'Sheet1!A:Z';
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}?key=${apiKey}`;
 
     try {
