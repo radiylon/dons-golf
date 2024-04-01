@@ -5,5 +5,5 @@ interface DefaultLayoutProps {
 }
 
 export default function DefaultLayout({ children }: DefaultLayoutProps) {
-  return <main className="flex flex-col min-h-screen w-full">{children}</main>
+  return <main className="min-h-screen w-full p-4">{children}</main>
 }
