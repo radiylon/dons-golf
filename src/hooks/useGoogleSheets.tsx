@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 
-interface DataRow {
+export interface DataRow {
   [key: string]: string; // You can adjust the type according to your data
 }
 
