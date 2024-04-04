@@ -3,6 +3,8 @@ interface TournamentDetailsProps {
 }
 
 export default function TournamentDetails({ tournament }: TournamentDetailsProps) {
+  if (!tournament) return null;
+
   return (
     <div className="flex flex-col justify-center items-center bg-primary min-h-48 w-full rounded-md p-4">
       <h1 className="text-neutral text-4xl font-bold">{tournament.tournament}</h1>
