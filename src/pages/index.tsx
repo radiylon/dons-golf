@@ -1,12 +1,20 @@
+import type { InferGetServerSidePropsType, GetServerSideProps } from 'next'
 import useGoogleSheets from "@/hooks/useGoogleSheets";
-import DefaultLayout from "@/layouts/DefaultLayout";
 import TournamentCard from "@/components/TournamentCard";
-import { ReactNode } from "react";
 import SchoolCard from "@/components/SchoolCard";
+import { getGoogleSheetsData } from '@/hooks/useGoogleSheets';
 
-export default function Home() {
-  const { data } = useGoogleSheets();
+export const getServerSideProps = (async () => {
+  const initialData = await getGoogleSheetsData();
+  return { props: { initialData } }
+}) satisfies GetServerSideProps<{ initialData: any }>
+
+
+export default function Home({ initialData }: InferGetServerSidePropsType<typeof getServerSideProps>) {
+  const { data } = useGoogleSheets({ initialData });
   console.log('data', data);
+
+  if (!data) return null;
 
   return (
     <div className="px-24">
