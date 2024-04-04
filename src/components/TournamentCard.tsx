@@ -21,13 +21,13 @@ export default function TournamentCard({ row, onClick }: TournamentCardProps) {
   if (!row) return null;
 
   return (
-    <div className="flex flex-col hover:opacity-80 hover:cursor-pointer" onClick={() => onClick(row)}>
+    <div className="flex flex-col hover:opacity-75 hover:cursor-pointer" onClick={() => onClick(row)}>
       <div className="bg-secondary rounded-t-md p-2 pl-4">
-        <span className="text-neutral font-bold">{row.tournament}</span>
-        <span className="text-neutral">{` @ ${row.course}`}</span>
-        <span className="text-base-100">{` [${row.city}, ${row.state}]`}</span>
+          <span className="text-neutral font-bold">{row.tournament}</span>
+          <span className="text-neutral">{` @ ${row.course}`}</span>
+          <span className="text-base-100">{` [${row.city}, ${row.state}]`}</span>
       </div>
-      <div className="flex flex-row bg-primary">
+      <div className={`flex flex-row bg-primary ${isTournamentStarted ? '' : 'opacity-50'}`}>
         <div className="stat space-y-2">
           <div className="stat-title text-neutral font-bold">PARS</div>
           <div className="stat-value text-accent">{isTournamentStarted ? row.pars : 'TBD'}</div>

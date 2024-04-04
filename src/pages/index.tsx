@@ -3,7 +3,7 @@ import useGoogleSheets from "@/hooks/useGoogleSheets";
 import TournamentCard from "@/components/TournamentCard";
 import SchoolCard from "@/components/SchoolCard";
 import { getGoogleSheetsData } from '@/hooks/useGoogleSheets';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import TournamentDetails from '@/components/TournamentDetails';
 
 export const getServerSideProps = (async () => {
@@ -18,7 +18,17 @@ export default function Home({ initialData }: InferGetServerSidePropsType<typeof
   const { data } = useGoogleSheets({ initialData });
   console.log('data', data);
 
-  const onTournamentSelect = (row: any) => setTournament(row);
+  const onTournamentSelect = (row: any) => {
+    sessionStorage.setItem('tournament', JSON.stringify(row));
+    setTournament(row)
+  };
+
+  useEffect(() => {
+    const sessionData = sessionStorage.getItem('tournament');
+    if (sessionData) {
+      setTournament(JSON.parse(sessionData));
+    }
+  }, []);
   
   if (!data) return null;
 
@@ -36,7 +46,6 @@ export default function Home({ initialData }: InferGetServerSidePropsType<typeof
           <SchoolCard />
           <TournamentDetails tournament={tournament} />
         </div>
-
       </div>
     </div>
   );
