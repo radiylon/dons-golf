@@ -9,7 +9,6 @@ export default function TournamentCard({ row }: TournamentCardProps) {
   const startDate = new Date(row.start);
   const endDate = new Date(row.end);
   const isTournamentStarted = today >= startDate;
-  const isTournamentFinished = today >= endDate;
 
   const formatDate = (date: Date ) => new Intl.DateTimeFormat('en-US', {
     month: 'long',
