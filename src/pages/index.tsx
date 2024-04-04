@@ -3,6 +3,8 @@ import useGoogleSheets from "@/hooks/useGoogleSheets";
 import TournamentCard from "@/components/TournamentCard";
 import SchoolCard from "@/components/SchoolCard";
 import { getGoogleSheetsData } from '@/hooks/useGoogleSheets';
+import { useState } from 'react';
+import TournamentDetails from '@/components/TournamentDetails';
 
 export const getServerSideProps = (async () => {
   const initialData = await getGoogleSheetsData();
@@ -11,9 +13,13 @@ export const getServerSideProps = (async () => {
 
 
 export default function Home({ initialData }: InferGetServerSidePropsType<typeof getServerSideProps>) {
+  const [tournament, setTournament] = useState<any>();
+  
   const { data } = useGoogleSheets({ initialData });
   console.log('data', data);
 
+  const onTournamentSelect = (row: any) => setTournament(row);
+  
   if (!data) return null;
 
   return (
@@ -22,11 +28,15 @@ export default function Home({ initialData }: InferGetServerSidePropsType<typeof
         {/* CARDS */}
         <div className='w-1/2 overflow-y-auto space-y-2 bg-opacity-50 py-4'>
           {data?.map((row, index) => (
-            <TournamentCard key={index} row={row} />
+            <TournamentCard key={index} row={row} index={index} onClick={onTournamentSelect} />
           ))}
         </div>
-        {/* SCHOOL + DESCRIPTION */}
-        <SchoolCard />
+        {/* SCHOOL + TOURNAMENT DETAILS */}
+        <div className='flex flex-col w-1/2 space-y-2 py-4'>
+          <SchoolCard />
+          <TournamentDetails tournament={tournament} />
+        </div>
+
       </div>
     </div>
   );

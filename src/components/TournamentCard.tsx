@@ -2,9 +2,11 @@ import { DataRow } from "@/hooks/useGoogleSheets";
 
 interface TournamentCardProps {
   row: DataRow;
+  index: number;
+  onClick: (row: any) => void;
 }
 
-export default function TournamentCard({ row }: TournamentCardProps) {
+export default function TournamentCard({ row, onClick }: TournamentCardProps) {
   const today = new Date();
   const startDate = new Date(row.start);
   const endDate = new Date(row.end);
@@ -19,7 +21,7 @@ export default function TournamentCard({ row }: TournamentCardProps) {
   if (!row) return null;
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col hover:opacity-80 hover:cursor-pointer" onClick={() => onClick(row)}>
       <div className="bg-secondary rounded-t-md p-2 pl-4">
         <span className="text-neutral font-bold">{row.tournament}</span>
         <span className="text-neutral">{` @ ${row.course}`}</span>
