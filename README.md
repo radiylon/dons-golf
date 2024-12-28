@@ -1,4 +1,4 @@
-# Dons Golf
+# Dons Golf Score Tracker
 
 ## Getting Started
 
