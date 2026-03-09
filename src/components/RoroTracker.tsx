@@ -185,12 +185,12 @@ export default function RoroTracker() {
       {header}
 
       <div className="max-w-lg mx-auto px-4">
-        {/* LastUpdated (only when live) */}
-        {tournamentIsLive && (
+        {/* LastUpdated hidden for now */}
+        {/* {tournamentIsLive && (
           <div className="flex justify-end py-2 mb-2">
             <LastUpdated timestamp={lastUpdated} isFetching={isFetching} />
           </div>
-        )}
+        )} */}
 
         {/* Tournament Info */}
         {activeTournament && (
