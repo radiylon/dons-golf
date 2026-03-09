@@ -3,7 +3,9 @@
 import { useRef, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTournaments } from "@/lib/hooks";
+import { fetchTeamLeaderboard, fetchPlayerLeaderboard } from "@/lib/api";
 import { getTournamentStatus } from "@/lib/format";
 import type { Tournament } from "@/lib/types";
 
@@ -97,12 +99,28 @@ const icons: Record<string, (props: { active: boolean }) => React.ReactNode> = {
 
 export default function FloatingNav() {
   const pathname = usePathname();
+  const queryClient = useQueryClient();
   const { data } = useTournaments();
   const tournaments = data?.results ?? [];
   const activeTournamentId = getActiveTournamentId(tournaments);
 
   const itemRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
   const [pill, setPill] = useState<{ left: number; width: number } | null>(null);
+
+  // Prefetch leaderboard data so navigating to Live is instant
+  useEffect(() => {
+    if (!activeTournamentId) return;
+    queryClient.prefetchQuery({
+      queryKey: ["team-leaderboard", activeTournamentId],
+      queryFn: () => fetchTeamLeaderboard(activeTournamentId),
+      staleTime: 30_000,
+    });
+    queryClient.prefetchQuery({
+      queryKey: ["player-leaderboard", activeTournamentId],
+      queryFn: () => fetchPlayerLeaderboard(activeTournamentId),
+      staleTime: 30_000,
+    });
+  }, [activeTournamentId, queryClient]);
 
   useEffect(() => {
     const activeKey = items.find((item) => {
