@@ -29,3 +29,20 @@ export function ordinal(n: number): string {
     default: return `${n}th`;
   }
 }
+
+export type TournamentStatus = "live" | "upcoming" | "completed";
+
+export function getTournamentStatus(t: {
+  isComplete: boolean;
+  startDate: string;
+  endDate: string;
+}): TournamentStatus {
+  if (t.isComplete) return "completed";
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const start = new Date(t.startDate + "T00:00:00");
+  const end = new Date(t.endDate + "T23:59:59");
+  if (start <= today && today <= end) return "live";
+  if (end < today) return "completed";
+  return "upcoming";
+}

@@ -1,67 +1,15 @@
 "use client";
 
 import { useTournaments, useTeamLeaderboard, usePlayerLeaderboard } from "@/lib/hooks";
-import { SF_SCHOOL_ID, schoolLogoUrl } from "@/lib/constants";
+import { SF_SCHOOL_ID, TOURNAMENT_NAME_OVERRIDES } from "@/lib/constants";
 import { formatScore, scoreColor } from "@/lib/format";
-import type { TeamResult, PlayerResult, Course } from "@/lib/types";
-import DonsPlayersTable from "./DonsPlayersTable";
+import type { PlayerResult } from "@/lib/types";
+import TeamStandings from "./TeamStandings";
+import DonsPlayers from "./DonsPlayers";
 import LastUpdated from "./LastUpdated";
+import PageHeader from "./PageHeader";
 import Link from "next/link";
 import { useState } from "react";
-
-function TeamRow({
-  team,
-  rank,
-  isSF,
-}: {
-  team: TeamResult;
-  rank: number;
-  isSF: boolean;
-}) {
-  const hasScores = team.totalStrokes > 0;
-
-  return (
-    <tr
-      className={
-        isSF
-          ? "bg-usf-green/5 border-l-4 border-l-usf-green font-semibold"
-          : "border-l-4 border-l-transparent"
-      }
-    >
-      <td className="py-2.5 pl-3 pr-2 text-center tabular-nums">{rank}</td>
-      <td className="py-2.5 px-2">
-        <div className="flex items-center gap-2">
-          {team.schoolLogo ? (
-            <img
-              src={schoolLogoUrl(team.schoolLogo, 32)}
-              alt=""
-              className="w-5 h-5 object-contain shrink-0"
-            />
-          ) : (
-            <div className="w-5 h-5 bg-gray-200 rounded shrink-0" />
-          )}
-          <span className={isSF ? "text-usf-green" : ""}>{team.schoolName}</span>
-        </div>
-      </td>
-      <td
-        className={`py-2.5 px-2 text-center tabular-nums ${hasScores ? scoreColor(team.totalScore) : "text-gray-400"}`}
-      >
-        {hasScores ? formatScore(team.totalScore) : "–"}
-      </td>
-      {team.strokes.map((strokes, i) => (
-        <td
-          key={i}
-          className="py-2.5 px-2 text-center tabular-nums text-gray-500 hidden sm:table-cell"
-        >
-          {strokes > 0 ? strokes : "–"}
-        </td>
-      ))}
-      <td className="py-2.5 px-2 text-center tabular-nums hidden sm:table-cell">
-        {team.totalStrokes > 0 ? team.totalStrokes : "–"}
-      </td>
-    </tr>
-  );
-}
 
 export default function Scoreboard({
   tournamentId,
@@ -88,22 +36,9 @@ export default function Scoreboard({
     playerQuery.dataUpdatedAt || 0
   );
 
-  const tournamentName = tournamentMeta?.tournamentName ?? "Tournament";
+  const tournamentName = TOURNAMENT_NAME_OVERRIDES[tournamentId] ?? tournamentMeta?.tournamentName ?? "Tournament";
 
-  const header = (
-    <header className="bg-usf-green px-4 pt-12 pb-5 mb-4">
-      <div className="max-w-lg mx-auto">
-        <div className="flex items-center gap-3">
-          <img
-            src="/usf-logo.svg"
-            alt="USF Dons"
-            className="w-9 h-9 object-contain"
-          />
-          <h1 className="text-white text-xl font-bold">{tournamentName}</h1>
-        </div>
-      </div>
-    </header>
-  );
+  const header = <PageHeader title={tournamentName} />;
 
   if (isLoading) {
     return (
@@ -183,23 +118,14 @@ export default function Scoreboard({
   const totalPar = courses[0]?.totalPar || 72;
   const totalYards = courses[0]?.totalYards || 0;
 
-  // Precompute player rankings once instead of per-card
-  const rankedPlayers = [...players]
-    .filter((p) => p.totalStrokes > 0)
-    .sort((a, b) => a.totalScore - b.totalScore);
-
-  const playerRankMap = new Map<string, { rank: number; isTied: boolean }>();
-  for (let i = 0; i < rankedPlayers.length; i++) {
-    const player = rankedPlayers[i];
-    const isTied = rankedPlayers.some(
-      (p, j) => j !== i && p.totalScore === player.totalScore
-    );
-    playerRankMap.set(player.playerId, { rank: i + 1, isTied });
-  }
+  const playerRankMap = computePlayerRanks(players);
 
   return (
     <>
-      {header}
+      <PageHeader
+        title={tournamentName}
+        subtitle={<><span className="font-bold text-white">{courseName}</span>{" · "}Par {totalPar} · {totalYards.toLocaleString()} yards · {numRounds} rounds</>}
+      />
 
       <div className="max-w-lg mx-auto px-4 py-2 flex items-center justify-between">
         <Link
@@ -225,14 +151,6 @@ export default function Scoreboard({
       </div>
 
       <div className="max-w-lg mx-auto pt-2">
-      {/* Course info */}
-      <div className="mx-4 mb-4">
-        <h2 className="text-base font-semibold text-gray-900">{courseName}</h2>
-        <p className="text-sm text-gray-500 mt-0.5">
-          Par {totalPar} · {totalYards.toLocaleString()} yards · {numRounds} rounds
-        </p>
-      </div>
-
 
       {/* SF Summary Banner */}
       <div className="mx-4 mb-4 bg-usf-green rounded-xl p-4 text-white">
@@ -250,14 +168,14 @@ export default function Scoreboard({
           <div className="text-right">
             <p className="text-white text-xs uppercase">Team Position</p>
             {sfTeam && sfTeam.totalStrokes > 0 ? (
-              <p className="text-lg font-bold tabular-nums mt-0.5">
+              <p className="text-3xl font-bold tabular-nums mt-0.5">
                 {sfRank}
                 <span className="font-normal text-white/50">
                   /{sortedTeams.length}
                 </span>
               </p>
             ) : (
-              <p className="text-2xl font-bold tabular-nums">–</p>
+              <p className="text-3xl font-bold tabular-nums">–</p>
             )}
           </div>
         </div>
@@ -330,97 +248,18 @@ export default function Scoreboard({
   );
 }
 
-function TeamStandings({
-  teams,
-  numRounds,
-}: {
-  teams: TeamResult[];
-  numRounds: number;
-}) {
-  return (
-    <div className="mx-4 bg-white rounded-xl border border-gray-200 overflow-hidden">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-gray-100 text-gray-400 text-xs uppercase tracking-wider">
-            <th className="py-2.5 pl-3 pr-2 text-center font-medium w-10">
-              #
-            </th>
-            <th className="py-2.5 px-2 text-left font-medium">Team</th>
-            <th className="py-2.5 px-2 text-center font-medium">Score</th>
-            {Array.from({ length: numRounds }, (_, i) => (
-              <th
-                key={i}
-                className="py-2.5 px-2 text-center font-medium hidden sm:table-cell"
-              >
-                R{i + 1}
-              </th>
-            ))}
-            <th className="py-2.5 px-2 text-center font-medium hidden sm:table-cell">
-              Tot
-            </th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-50">
-          {teams.map((team, i) => (
-            <TeamRow
-              key={team.schoolId}
-              team={team}
-              rank={i + 1}
-              isSF={team.schoolId === SF_SCHOOL_ID}
-            />
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
+function computePlayerRanks(players: PlayerResult[]): Map<string, { rank: number; isTied: boolean }> {
+  const ranked = [...players]
+    .filter((p) => p.totalStrokes > 0)
+    .sort((a, b) => a.totalScore - b.totalScore);
 
-function DonsPlayers({
-  players,
-  courses,
-  playerRankMap,
-}: {
-  players: PlayerResult[];
-  courses: Course[];
-  playerRankMap: Map<string, { rank: number; isTied: boolean }>;
-}) {
-  const [tableRound, setTableRound] = useState<"total" | number>("total");
-
-  return (
-    <div className="mx-4">
-      {/* Round pills */}
-      <div className="flex gap-1 mb-3">
-        <button
-          onClick={() => setTableRound("total")}
-          className={`text-xs px-2.5 py-1 rounded-full font-medium transition-colors ${
-            tableRound === "total"
-              ? "bg-usf-green text-white"
-              : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-          }`}
-        >
-          Total
-        </button>
-        {courses.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => setTableRound(i)}
-            className={`text-xs px-2.5 py-1 rounded-full font-medium transition-colors ${
-              tableRound === i
-                ? "bg-usf-green text-white"
-                : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-            }`}
-          >
-            R{i + 1}
-          </button>
-        ))}
-      </div>
-
-      <DonsPlayersTable
-        players={players}
-        courses={courses}
-        playerRankMap={playerRankMap}
-        tableRound={tableRound}
-      />
-    </div>
-  );
+  const map = new Map<string, { rank: number; isTied: boolean }>();
+  for (let i = 0; i < ranked.length; i++) {
+    const player = ranked[i];
+    const isTied = ranked.some(
+      (p, j) => j !== i && p.totalScore === player.totalScore
+    );
+    map.set(player.playerId, { rank: i + 1, isTied });
+  }
+  return map;
 }

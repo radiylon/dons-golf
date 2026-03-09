@@ -1,15 +1,21 @@
 export const SF_SCHOOL_ID = "2490";
-export const SF_SCHOOL_NAME = "San Francisco";
 export const SEASONS = [2024, 2025, 2026];
 
 export function seasonLabel(season: number): string {
   return `${season - 1}-${String(season).slice(2)}`;
 }
 
-export const CLIPPD_BASE = "https://scoreboard.clippd.com";
+const CLIPPD_BASE = "https://scoreboard.clippd.com";
 export const CLIPPD_API = `${CLIPPD_BASE}/api`;
 
 export const POLL_INTERVAL_MS = 30_000;
+
+export const RORO_PLAYER_NAME = "Rodaylin Mina";
+
+export const TOURNAMENT_NAME_OVERRIDES: Record<string, string> = {
+  "239116": "Juli Inkster Invitational",
+};
+export const RORO_ENROLLMENT_YEAR = 2023; // Fall 2023 freshman → computes class year dynamically
 
 const CLIPPD_CDN = "https://clippd-prod.mo.cloudinary.net/scoreboard";
 

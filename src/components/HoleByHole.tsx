@@ -1,4 +1,4 @@
-import type { PlayerResult, Course } from "@/lib/types";
+import type { PlayerRound, Course } from "@/lib/types";
 
 function holeScoreClass(score: number | null, par: number): string {
   if (score === null) return "";
@@ -85,7 +85,7 @@ export function HoleByHole({
   round,
   course,
 }: {
-  round: PlayerResult["rounds"][0] | undefined;
+  round: PlayerRound | undefined;
   course: Course | undefined;
 }) {
   if (!round || !course) {

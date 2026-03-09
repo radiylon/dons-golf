@@ -2,106 +2,10 @@
 
 import { Fragment, useState } from "react";
 import type { PlayerResult, Course } from "@/lib/types";
-import { playerPhotoUrl } from "@/lib/constants";
 import { formatScore, scoreColor, ordinal, nineHoleTotal } from "@/lib/format";
-import { HoleByHole } from "./HoleByHole";
-
-function PlayerAvatar({ player }: { player: PlayerResult }) {
-  if (player.userPicture) {
-    return (
-      <img
-        src={playerPhotoUrl(player.userPicture, 40)}
-        alt=""
-        className="w-7 h-7 rounded-md object-cover shrink-0"
-      />
-    );
-  }
-  return (
-    <div className="w-7 h-7 rounded-md bg-usf-green/10 shrink-0 flex items-center justify-center text-usf-green text-[10px] font-bold">
-      {player.playerName
-        ?.split(" ")
-        .map((n) => n[0])
-        .join("")}
-    </div>
-  );
-}
-
-function PlayerName({ player }: { player: PlayerResult }) {
-  const isPlaying = player.rounds.some((r) => r.status === "in_progress");
-  return (
-    <div className="min-w-0">
-      <div className="flex items-center gap-1.5">
-        <span className="font-medium text-sm truncate">{player.playerName}</span>
-        {player.teamLabel === "IND" && (
-          <span className="text-[9px] text-gray-400">IND</span>
-        )}
-        {isPlaying && (
-          <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse shrink-0" />
-        )}
-      </div>
-    </div>
-  );
-}
-
-function ExpandedScorecard({
-  player,
-  courses,
-  colSpan,
-  tableRound,
-}: {
-  player: PlayerResult;
-  courses: Course[];
-  colSpan: number;
-  tableRound: "total" | number;
-}) {
-  const initialRound = typeof tableRound === "number" ? tableRound : 0;
-  const [selectedRound, setSelectedRound] = useState(initialRound);
-  const safeRound = Math.min(selectedRound, courses.length - 1);
-
-  // Sync when the parent round pill changes
-  const prevTableRound = typeof tableRound === "number" ? tableRound : null;
-  if (prevTableRound !== null && prevTableRound !== selectedRound && typeof tableRound === "number") {
-    setSelectedRound(tableRound);
-  }
-
-  const showRoundSelector = typeof tableRound !== "number" && courses.length > 1;
-
-  return (
-    <tr>
-      <td colSpan={colSpan} className="p-0">
-        <div className="border-t border-gray-100 bg-gray-50/50">
-          {/* Round selector — only in total mode (round mode already selects via pills) */}
-          {showRoundSelector && (
-            <div className="flex gap-1 px-4 pt-3">
-              {courses.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedRound(i);
-                  }}
-                  className={`text-xs px-3 py-1 rounded-full font-medium transition-colors ${
-                    selectedRound === i
-                      ? "bg-usf-green text-white"
-                      : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-                  }`}
-                >
-                  R{i + 1}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Hole-by-hole scorecard */}
-          <HoleByHole
-            round={player.rounds[safeRound] ?? undefined}
-            course={courses[safeRound]}
-          />
-        </div>
-      </td>
-    </tr>
-  );
-}
+import PlayerAvatar from "./PlayerAvatar";
+import PlayerName from "./PlayerName";
+import ExpandedScorecard from "./ExpandedScorecard";
 
 export default function DonsPlayersTable({
   players,
@@ -125,7 +29,7 @@ export default function DonsPlayersTable({
     });
 
   if (tableRound === "total") {
-    const colSpan = 3 + courses.length; // Player + rounds + Total + Pos
+    const colSpan = 3 + courses.length;
 
     return (
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden overflow-x-auto">
@@ -167,7 +71,7 @@ export default function DonsPlayersTable({
                     {player.strokes.map((strokes, i) => (
                       <td
                         key={i}
-                        className="py-2.5 px-2 text-center tabular-nums text-gray-600"
+                        className={`py-2.5 px-2 text-center tabular-nums ${strokes > 0 ? "text-gray-600" : "text-gray-300"}`}
                       >
                         {strokes > 0 ? strokes : "–"}
                       </td>
@@ -205,7 +109,7 @@ export default function DonsPlayersTable({
   // Round view
   const roundIndex = tableRound as number;
   const course = courses[roundIndex];
-  const colSpan = 5; // Player + Front + Back + Strokes + Score
+  const colSpan = 5;
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden overflow-x-auto">
@@ -253,14 +157,10 @@ export default function DonsPlayersTable({
                   </td>
                   <td
                     className={`py-2.5 px-2 text-center tabular-nums font-semibold ${
-                      score != null ? scoreColor(score) : "text-gray-300"
+                      score != null && strokes > 0 ? scoreColor(score) : "text-gray-300"
                     }`}
                   >
-                    {score != null
-                      ? formatScore(score)
-                      : strokes > 0 && course
-                        ? formatScore(strokes - course.totalPar)
-                        : "–"}
+                    {score != null && strokes > 0 ? formatScore(score) : "–"}
                   </td>
                 </tr>
                 {isExpanded && (
