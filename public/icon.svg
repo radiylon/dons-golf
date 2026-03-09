@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="64" fill="#00543C"/>
+  <circle cx="256" cy="240" r="20" fill="white"/>
+  <line x1="256" y1="220" x2="256" y2="100" stroke="white" stroke-width="4" stroke-linecap="round"/>
+  <path d="M256 100 L270 85 Q290 75 270 95 Z" fill="#FDBB30"/>
+  <text x="256" y="380" text-anchor="middle" fill="#FDBB30" font-size="96" font-weight="bold" font-family="system-ui">USF</text>
+</svg>

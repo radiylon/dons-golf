@@ -1,0 +1,16 @@
+{
+  "name": "USF Dons Golf",
+  "short_name": "Dons Golf",
+  "description": "Live scores for USF Dons Women's Golf",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#00543C",
+  "theme_color": "#00543C",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
