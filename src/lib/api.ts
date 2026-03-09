@@ -22,10 +22,12 @@ export async function fetchPlayerLeaderboard(tournamentId: string): Promise<Play
 /** Server-side fetchers — call Clippd directly, skip the /api proxy */
 
 export async function fetchTournamentsServer(): Promise<TournamentList> {
-  const firstPages = await Promise.all(
-    SEASONS.map((season) =>
+  // Fetch both pages for every season in parallel (speculative).
+  // Page 2 may return empty — that's fine and avoids the waterfall.
+  const fetches = SEASONS.flatMap((season) =>
+    [0, 10].map((offset) =>
       fetch(
-        `${CLIPPD_API}/tournaments?schoolId=${SF_SCHOOL_ID}&season=${season}&offset=0`,
+        `${CLIPPD_API}/tournaments?schoolId=${SF_SCHOOL_ID}&season=${season}&offset=${offset}`,
         {
           headers: { "User-Agent": "Mozilla/5.0" },
           next: { revalidate: 300 },
@@ -34,25 +36,11 @@ export async function fetchTournamentsServer(): Promise<TournamentList> {
     )
   );
 
-  const secondPages = await Promise.all(
-    firstPages.map((data, i) => {
-      if (data.results?.length >= 10) {
-        return fetch(
-          `${CLIPPD_API}/tournaments?schoolId=${SF_SCHOOL_ID}&season=${SEASONS[i]}&offset=10`,
-          {
-            headers: { "User-Agent": "Mozilla/5.0" },
-            next: { revalidate: 300 },
-          }
-        ).then((r) => (r.ok ? r.json() : { results: [] }));
-      }
-      return Promise.resolve({ results: [] });
-    })
-  );
+  const pages = await Promise.all(fetches);
 
   const allResults: Tournament[] = [];
-  for (let i = 0; i < SEASONS.length; i++) {
-    allResults.push(...(firstPages[i].results || []));
-    allResults.push(...(secondPages[i].results || []));
+  for (const page of pages) {
+    allResults.push(...(page.results || []));
   }
 
   const seen = new Set<string>();
