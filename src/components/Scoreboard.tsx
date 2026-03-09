@@ -1,11 +1,10 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { fetchTeamLeaderboard, fetchPlayerLeaderboard, fetchTournaments } from "@/lib/api";
-import { SF_SCHOOL_ID, POLL_INTERVAL_MS, schoolLogoUrl } from "@/lib/constants";
+import { useTournaments, useTeamLeaderboard, usePlayerLeaderboard } from "@/lib/hooks";
+import { SF_SCHOOL_ID, schoolLogoUrl } from "@/lib/constants";
 import { formatScore, scoreColor } from "@/lib/format";
 import type { TeamResult, PlayerResult, Course } from "@/lib/types";
-import PlayerCard from "./PlayerCard";
+import DonsPlayersTable from "./DonsPlayersTable";
 import LastUpdated from "./LastUpdated";
 import Link from "next/link";
 import { useState } from "react";
@@ -71,28 +70,15 @@ export default function Scoreboard({
 }) {
   const [activeTab, setActiveTab] = useState<"team" | "players">("team");
 
-  const tournamentsQuery = useQuery({
-    queryKey: ["tournaments"],
-    queryFn: fetchTournaments,
-    staleTime: 5 * 60_000,
-  });
+  const tournamentsQuery = useTournaments();
 
   const tournamentMeta = tournamentsQuery.data?.results.find(
     (t) => t.tournamentId === tournamentId
   );
   const startDate = tournamentMeta?.startDate;
 
-  const teamQuery = useQuery({
-    queryKey: ["team-leaderboard", tournamentId],
-    queryFn: () => fetchTeamLeaderboard(tournamentId),
-    refetchInterval: POLL_INTERVAL_MS,
-  });
-
-  const playerQuery = useQuery({
-    queryKey: ["player-leaderboard", tournamentId],
-    queryFn: () => fetchPlayerLeaderboard(tournamentId),
-    refetchInterval: POLL_INTERVAL_MS,
-  });
+  const teamQuery = useTeamLeaderboard(tournamentId);
+  const playerQuery = usePlayerLeaderboard(tournamentId);
 
   const isLoading = teamQuery.isLoading || playerQuery.isLoading;
   const isError = teamQuery.isError || playerQuery.isError;
@@ -107,26 +93,14 @@ export default function Scoreboard({
   const header = (
     <header className="bg-usf-green px-4 pt-12 pb-5 mb-4">
       <div className="max-w-lg mx-auto">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-1 text-white/60 text-xs hover:text-white/80 transition-colors mb-2"
-        >
-          <svg
-            className="w-3.5 h-3.5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
-          All Tournaments
-        </Link>
-        <h1 className="text-white text-xl font-bold">{tournamentName}</h1>
+        <div className="flex items-center gap-3">
+          <img
+            src="/usf-logo.svg"
+            alt="USF Dons"
+            className="w-9 h-9 object-contain"
+          />
+          <h1 className="text-white text-xl font-bold">{tournamentName}</h1>
+        </div>
       </div>
     </header>
   );
@@ -227,6 +201,29 @@ export default function Scoreboard({
     <>
       {header}
 
+      <div className="max-w-lg mx-auto px-4 py-2 flex items-center justify-between">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1 text-gray-400 text-xs hover:text-gray-600 transition-colors"
+        >
+          <svg
+            className="w-3.5 h-3.5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+          All Tournaments
+        </Link>
+        <LastUpdated timestamp={lastUpdated} isFetching={isFetching} />
+      </div>
+
       <div className="max-w-lg mx-auto pt-2">
       {/* Course info */}
       <div className="mx-4 mb-4">
@@ -235,6 +232,7 @@ export default function Scoreboard({
           Par {totalPar} · {totalYards.toLocaleString()} yards · {numRounds} rounds
         </p>
       </div>
+
 
       {/* SF Summary Banner */}
       <div className="mx-4 mb-4 bg-usf-green rounded-xl p-4 text-white">
@@ -250,7 +248,7 @@ export default function Scoreboard({
             </p>
           </div>
           <div className="text-right">
-            <p className="text-white/60 text-xs">Team Position</p>
+            <p className="text-white text-xs uppercase">Team Position</p>
             {sfTeam && sfTeam.totalStrokes > 0 ? (
               <p className="text-lg font-bold tabular-nums mt-0.5">
                 {sfRank}
@@ -291,9 +289,6 @@ export default function Scoreboard({
           </div>
         )}
       </div>
-
-      {/* Last Updated */}
-      <LastUpdated timestamp={lastUpdated} isFetching={isFetching} />
 
       {/* Tabs */}
       <div className="mx-4 mb-4 flex gap-1 bg-gray-100 rounded-lg p-1">
@@ -389,16 +384,43 @@ function DonsPlayers({
   courses: Course[];
   playerRankMap: Map<string, { rank: number; isTied: boolean }>;
 }) {
+  const [tableRound, setTableRound] = useState<"total" | number>("total");
+
   return (
-    <div className="mx-4 space-y-3">
-      {players.map((player) => (
-        <PlayerCard
-          key={player.playerId}
-          player={player}
-          courses={courses}
-          playerRankMap={playerRankMap}
-        />
-      ))}
+    <div className="mx-4">
+      {/* Round pills */}
+      <div className="flex gap-1 mb-3">
+        <button
+          onClick={() => setTableRound("total")}
+          className={`text-xs px-2.5 py-1 rounded-full font-medium transition-colors ${
+            tableRound === "total"
+              ? "bg-usf-green text-white"
+              : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+          }`}
+        >
+          Total
+        </button>
+        {courses.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => setTableRound(i)}
+            className={`text-xs px-2.5 py-1 rounded-full font-medium transition-colors ${
+              tableRound === i
+                ? "bg-usf-green text-white"
+                : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+            }`}
+          >
+            R{i + 1}
+          </button>
+        ))}
+      </div>
+
+      <DonsPlayersTable
+        players={players}
+        courses={courses}
+        playerRankMap={playerRankMap}
+        tableRound={tableRound}
+      />
     </div>
   );
 }

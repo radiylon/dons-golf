@@ -1,5 +1,10 @@
 export const SF_SCHOOL_ID = "2490";
 export const SF_SCHOOL_NAME = "San Francisco";
+export const SEASONS = [2024, 2025, 2026];
+
+export function seasonLabel(season: number): string {
+  return `${season - 1}-${String(season).slice(2)}`;
+}
 
 export const CLIPPD_BASE = "https://scoreboard.clippd.com";
 export const CLIPPD_API = `${CLIPPD_BASE}/api`;

@@ -40,7 +40,7 @@ export default function LastUpdated({
   const refreshSeconds = POLL_INTERVAL_MS / 1000;
 
   return (
-    <div className="flex items-center justify-center gap-1.5 text-[11px] text-gray-400 py-2">
+    <div className="flex items-center gap-1.5 text-[11px] text-gray-400">
       {isFetching ? (
         <>
           <div className="w-3 h-3 border border-gray-300 border-t-transparent rounded-full animate-spin" />

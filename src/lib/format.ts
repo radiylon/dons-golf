@@ -9,6 +9,16 @@ export function scoreColor(score: number): string {
   return "text-gray-600";
 }
 
+export function nineHoleTotal(
+  strokes: (number | null)[],
+  start: number,
+  end: number
+): number | null {
+  const slice = strokes.slice(start, end);
+  const played = slice.filter((s): s is number => s !== null);
+  return played.length > 0 ? played.reduce((a, b) => a + b, 0) : null;
+}
+
 export function ordinal(n: number): string {
   const mod100 = n % 100;
   if (mod100 >= 11 && mod100 <= 13) return `${n}th`;

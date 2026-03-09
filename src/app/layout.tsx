@@ -7,6 +7,10 @@ export const metadata: Metadata = {
   description:
     "Live scores and stats for USF Dons Women's Golf at TPC Harding Park",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/favicon.ico",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",

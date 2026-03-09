@@ -5,10 +5,19 @@ export default function Home() {
     <main className="min-h-screen pb-8">
       <header className="bg-usf-green px-4 pt-12 pb-5">
         <div className="max-w-lg mx-auto">
-          <h1 className="text-white text-xl font-bold">USF Dons Golf</h1>
-          <p className="text-usf-gold text-sm font-medium mt-0.5">
-            Women&apos;s Golf Schedule &amp; Results
-          </p>
+          <div className="flex items-center gap-3">
+            <img
+              src="/usf-logo.svg"
+              alt="USF Dons"
+              className="w-9 h-9 object-contain"
+            />
+            <div>
+              <h1 className="text-white text-xl font-bold">USF Dons Golf</h1>
+              <p className="text-usf-gold text-sm font-medium mt-0.5">
+                Women&apos;s Golf Schedule &amp; Results
+              </p>
+            </div>
+          </div>
         </div>
       </header>
 

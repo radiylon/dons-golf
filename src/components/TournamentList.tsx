@@ -1,7 +1,8 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { fetchTournaments } from "@/lib/api";
+import { useState } from "react";
+import { useTournaments } from "@/lib/hooks";
+import { seasonLabel } from "@/lib/constants";
 import type { Tournament } from "@/lib/types";
 import Link from "next/link";
 
@@ -14,11 +15,8 @@ function getTournamentStatus(t: Tournament): TournamentStatus {
   today.setHours(0, 0, 0, 0);
   const start = new Date(t.startDate + "T00:00:00");
   const end = new Date(t.endDate + "T23:59:59");
-  const msPerDay = 86_400_000;
-  const daysUntilStart = (start.getTime() - today.getTime()) / msPerDay;
 
   if (start <= today && today <= end) return "live";
-  if (daysUntilStart > 0 && daysUntilStart <= 1) return "live";
 
   // Past tournaments that aren't marked complete
   if (end < today) return "completed";
@@ -53,7 +51,11 @@ function StatusBadge({ status }: { status: TournamentStatus }) {
       </span>
     );
   }
-  return null;
+  return (
+    <span className="text-[10px] font-semibold uppercase tracking-wider bg-gray-100 text-gray-400 px-2 py-0.5 rounded-full">
+      Completed
+    </span>
+  );
 }
 
 function CardContent({ tournament, status }: { tournament: Tournament; status: TournamentStatus }) {
@@ -74,42 +76,34 @@ function CardContent({ tournament, status }: { tournament: Tournament; status: T
             {tournament.plannedRounds} rounds
           </p>
         </div>
-        {status !== "upcoming" && (
-          <svg
-            className="w-4 h-4 text-gray-300 mt-1 shrink-0"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
-        )}
+        <svg
+          className="w-4 h-4 text-gray-300 mt-1 shrink-0"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M9 5l7 7-7 7"
+          />
+        </svg>
       </div>
     </div>
   );
 }
 
 function TournamentCard({ tournament, status }: { tournament: Tournament; status: TournamentStatus }) {
-  if (status === "upcoming") {
-    return (
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden opacity-75">
-        <CardContent tournament={tournament} status={status} />
-      </div>
-    );
-  }
-
   return (
     <Link
       href={`/tournament/${tournament.tournamentId}`}
       className={`block bg-white rounded-xl border overflow-hidden transition-all hover:shadow-md ${
         status === "live"
           ? "border-red-200 ring-1 ring-red-100"
-          : "border-gray-200"
+          : status === "upcoming"
+            ? "border-gray-200 opacity-75"
+            : "border-gray-200"
       }`}
     >
       <CardContent tournament={tournament} status={status} />
@@ -118,11 +112,19 @@ function TournamentCard({ tournament, status }: { tournament: Tournament; status
 }
 
 export default function TournamentList() {
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ["tournaments"],
-    queryFn: fetchTournaments,
-    staleTime: 5 * 60_000,
-  });
+  const { data, isLoading, isError } = useTournaments();
+
+  const tournaments = data?.results ?? [];
+
+  // Extract available seasons from data, sorted newest first
+  const availableSeasons = [
+    ...new Set(tournaments.map((t) => t.season)),
+  ].sort((a, b) => b - a);
+
+  const [selectedSeason, setSelectedSeason] = useState<number | "all" | null>(null);
+
+  // Default to the latest season once data loads
+  const activeSeason = selectedSeason ?? (availableSeasons[0] || "all");
 
   if (isLoading) {
     return (
@@ -143,58 +145,50 @@ export default function TournamentList() {
     );
   }
 
-  const tournaments = data?.results ?? [];
+  const filteredTournaments =
+    activeSeason === "all"
+      ? tournaments
+      : tournaments.filter((t) => t.season === activeSeason);
 
-  const grouped = tournaments.reduce(
-    (acc, tournament) => {
-      const status = getTournamentStatus(tournament);
-      acc[status].push({ tournament, status });
-      return acc;
-    },
-    { live: [] as { tournament: Tournament; status: TournamentStatus }[], upcoming: [] as { tournament: Tournament; status: TournamentStatus }[], completed: [] as { tournament: Tournament; status: TournamentStatus }[] }
-  );
-
-  const { live, upcoming, completed } = grouped;
+  // Flat list ordered: live first, then upcoming, then completed
+  const ordered = filteredTournaments
+    .map((tournament) => ({ tournament, status: getTournamentStatus(tournament) }))
+    .sort((a, b) => {
+      const priority: Record<TournamentStatus, number> = { live: 0, upcoming: 1, completed: 2 };
+      return priority[a.status] - priority[b.status];
+    });
 
   return (
-    <div className="mx-4 space-y-6">
-      {live.length > 0 && (
-        <section>
-          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-1 mb-2">
-            Live Now
-          </h2>
-          <div className="space-y-3">
-            {live.map(({ tournament, status }) => (
-              <TournamentCard key={tournament.tournamentId} tournament={tournament} status={status} />
-            ))}
-          </div>
-        </section>
+    <div className="mx-4 space-y-4">
+      {/* Season filter */}
+      {availableSeasons.length > 1 && (
+        <div className="flex gap-1.5 overflow-x-auto pb-1">
+          {availableSeasons.map((season) => (
+            <button
+              key={season}
+              onClick={() => setSelectedSeason(season)}
+              className={`text-xs px-3 py-1.5 rounded-full font-medium whitespace-nowrap transition-colors ${
+                activeSeason === season
+                  ? "bg-usf-green text-white"
+                  : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+              }`}
+            >
+              {seasonLabel(season)}
+            </button>
+          ))}
+        </div>
       )}
 
-      {upcoming.length > 0 && (
-        <section>
-          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-1 mb-2">
-            Upcoming
-          </h2>
-          <div className="space-y-3">
-            {upcoming.map(({ tournament, status }) => (
-              <TournamentCard key={tournament.tournamentId} tournament={tournament} status={status} />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {completed.length > 0 && (
-        <section>
-          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-1 mb-2">
-            Completed
-          </h2>
-          <div className="space-y-3">
-            {completed.map(({ tournament, status }) => (
-              <TournamentCard key={tournament.tournamentId} tournament={tournament} status={status} />
-            ))}
-          </div>
-        </section>
+      {ordered.length > 0 ? (
+        <div className="space-y-3">
+          {ordered.map(({ tournament, status }) => (
+            <TournamentCard key={tournament.tournamentId} tournament={tournament} status={status} />
+          ))}
+        </div>
+      ) : (
+        <div className="py-12 text-center">
+          <p className="text-gray-400 text-sm">No tournaments found for this season.</p>
+        </div>
       )}
     </div>
   );
