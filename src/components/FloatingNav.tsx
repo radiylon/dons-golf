@@ -118,7 +118,7 @@ export default function FloatingNav() {
   }, [pathname, activeTournamentId]);
 
   return (
-    <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1 bg-white/80 backdrop-blur-lg border border-gray-200 rounded-full shadow-lg px-2 py-1.5">
+    <nav className="fixed left-1/2 -translate-x-1/2 z-50 flex items-center gap-1 bg-white/80 backdrop-blur-lg border border-gray-200 rounded-full shadow-lg px-2 py-1.5" style={{ bottom: "calc(12px + env(safe-area-inset-bottom, 12px))" }}>
       {/* Sliding pill indicator */}
       <div
         className={`absolute rounded-full bg-usf-green transition-all duration-300 ease-out ${pill ? "opacity-100" : "opacity-0"}`}
