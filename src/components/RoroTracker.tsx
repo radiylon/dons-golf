@@ -133,13 +133,31 @@ export default function RoroTracker() {
     return (
       <>
         {header}
-        <div className="flex items-center justify-center py-20">
-          <div className="text-center">
-            <div className="w-8 h-8 border-2 border-usf-green border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-            <p className="text-gray-500 text-sm">
-              Loading Roro&apos;s stats...
-            </p>
+        <div className="max-w-lg mx-auto px-4 pt-2 space-y-4 animate-pulse">
+          {/* Tournament link skeleton */}
+          <div className="bg-white border border-gray-200 rounded-xl px-4 py-3">
+            <div className="h-4 bg-gray-200 rounded w-3/4" />
+            <div className="h-3 bg-gray-100 rounded w-1/2 mt-2" />
           </div>
+          {/* Hero card skeleton */}
+          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+            <div className="p-5 flex items-center gap-4">
+              <div className="w-24 h-24 bg-gray-200 rounded-full shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="h-5 bg-gray-200 rounded w-36" />
+                <div className="h-3 bg-gray-100 rounded w-24" />
+              </div>
+            </div>
+            <div className="bg-usf-green/20 h-16" />
+          </div>
+          {/* Round cards skeleton */}
+          <div className="flex gap-2">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex-shrink-0 rounded-xl border border-gray-200 p-3 w-[120px] h-24 bg-white" />
+            ))}
+          </div>
+          {/* Scorecard skeleton */}
+          <div className="bg-white border border-gray-200 rounded-xl h-48" />
         </div>
       </>
     );

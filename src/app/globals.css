@@ -11,6 +11,12 @@
   --color-double: #991b1b;
 }
 
+@layer base {
+  button, a, [role="button"] {
+    @apply focus-visible:outline-2 focus-visible:outline-usf-green focus-visible:outline-offset-2;
+  }
+}
+
 body {
   font-family: system-ui, -apple-system, sans-serif;
 }

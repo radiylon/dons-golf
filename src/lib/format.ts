@@ -4,9 +4,11 @@ export function formatScore(score: number): string {
 }
 
 export function scoreColor(score: number): string {
-  if (score < 0) return "text-birdie";
-  if (score > 0) return "text-bogey";
-  return "text-gray-600";
+  if (score <= -2) return "text-eagle";
+  if (score === -1) return "text-birdie";
+  if (score === 0) return "text-gray-600";
+  if (score === 1) return "text-bogey";
+  return "text-double";
 }
 
 export function nineHoleTotal(

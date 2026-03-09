@@ -21,11 +21,18 @@ export default function TournamentList() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="text-center">
-          <div className="w-8 h-8 border-2 border-usf-green border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-gray-500 text-sm">Loading tournaments...</p>
-        </div>
+      <div className="mx-4 space-y-3">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="bg-white border border-gray-200 rounded-xl p-4 animate-pulse">
+            <div className="flex items-center justify-between">
+              <div className="space-y-2 flex-1">
+                <div className="h-4 bg-gray-200 rounded w-3/4" />
+                <div className="h-3 bg-gray-100 rounded w-1/2" />
+              </div>
+              <div className="h-8 w-16 bg-gray-100 rounded-lg" />
+            </div>
+          </div>
+        ))}
       </div>
     );
   }

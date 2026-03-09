@@ -1,11 +1,42 @@
 "use client";
 
-import { Fragment, useState } from "react";
+import { Fragment, useState, useRef, type ReactNode } from "react";
 import type { PlayerResult, Course } from "@/lib/types";
 import { formatScore, scoreColor, ordinal, nineHoleTotal } from "@/lib/format";
 import PlayerAvatar from "./PlayerAvatar";
 import PlayerName from "./PlayerName";
 import ExpandedScorecard from "./ExpandedScorecard";
+
+function CollapsibleRow({ isExpanded, colSpan, children }: { isExpanded: boolean; colSpan: number; children: ReactNode }) {
+  const hasExpanded = useRef(false);
+  if (isExpanded) hasExpanded.current = true;
+
+  return (
+    <tr>
+      <td colSpan={colSpan} className="p-0">
+        <div className={`grid transition-[grid-template-rows] duration-200 ${isExpanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
+          <div className={`overflow-hidden transition-opacity duration-200 ${isExpanded ? "opacity-100" : "opacity-0"}`}>
+            {hasExpanded.current && children}
+          </div>
+        </div>
+      </td>
+    </tr>
+  );
+}
+
+function ChevronIcon({ isExpanded }: { isExpanded: boolean }) {
+  return (
+    <svg
+      className={`w-3.5 h-3.5 text-gray-300 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={2}
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6 9l6 6 6-6" />
+    </svg>
+  );
+}
 
 export default function DonsPlayersTable({
   players,
@@ -29,7 +60,7 @@ export default function DonsPlayersTable({
     });
 
   if (tableRound === "total") {
-    const colSpan = 3 + courses.length;
+    const colSpan = 4 + courses.length;
 
     return (
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden overflow-x-auto">
@@ -44,6 +75,7 @@ export default function DonsPlayersTable({
               ))}
               <th className="py-2.5 px-2 text-center font-medium">Total</th>
               <th className="py-2.5 px-2 text-center font-medium">Pos</th>
+              <th className="py-2.5 w-8" />
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
@@ -88,15 +120,17 @@ export default function DonsPlayersTable({
                         ? `${isTied ? "T" : ""}${ordinal(rank)}`
                         : "–"}
                     </td>
+                    <td className="py-2.5 pr-3 text-center">
+                      <ChevronIcon isExpanded={isExpanded} />
+                    </td>
                   </tr>
-                  {isExpanded && (
+                  <CollapsibleRow isExpanded={isExpanded} colSpan={colSpan}>
                     <ExpandedScorecard
                       player={player}
                       courses={courses}
-                      colSpan={colSpan}
                       tableRound={tableRound}
                     />
-                  )}
+                  </CollapsibleRow>
                 </Fragment>
               );
             })}
@@ -108,8 +142,7 @@ export default function DonsPlayersTable({
 
   // Round view
   const roundIndex = tableRound as number;
-  const course = courses[roundIndex];
-  const colSpan = 5;
+  const colSpan = 6;
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden overflow-x-auto">
@@ -121,6 +154,7 @@ export default function DonsPlayersTable({
             <th className="py-2.5 px-2 text-center font-medium">Back</th>
             <th className="py-2.5 px-2 text-center font-medium">Strokes</th>
             <th className="py-2.5 px-2 text-center font-medium">Score</th>
+            <th className="py-2.5 w-8" />
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-50">
@@ -162,15 +196,17 @@ export default function DonsPlayersTable({
                   >
                     {score != null && strokes > 0 ? formatScore(score) : "–"}
                   </td>
+                  <td className="py-2.5 pr-3 text-center">
+                    <ChevronIcon isExpanded={isExpanded} />
+                  </td>
                 </tr>
-                {isExpanded && (
+                <CollapsibleRow isExpanded={isExpanded} colSpan={colSpan}>
                   <ExpandedScorecard
                     player={player}
                     courses={courses}
-                    colSpan={colSpan}
                     tableRound={tableRound}
                   />
-                )}
+                </CollapsibleRow>
               </Fragment>
             );
           })}
