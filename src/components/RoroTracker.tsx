@@ -76,14 +76,9 @@ function computeRank(
   return { rank, total, isTied };
 }
 
-function isRoundInProgress(round: PlayerRound | undefined): boolean {
-  if (!round) return false;
-  return round.status === "in_progress" || round.status === "played";
-}
-
 function getThruCount(round: PlayerRound | undefined): string | null {
-  if (!round || !isRoundInProgress(round)) return null;
-  if (round.thru && round.thru.trim() !== "" && round.thru !== "0") return round.thru;
+  if (!round || round.status !== "in_progress") return null;
+  if (round.thru && round.thru.trim() !== "") return round.thru;
   const played = round.strokes.filter((s) => s !== null).length;
   return played > 0 ? String(played) : null;
 }
@@ -116,8 +111,7 @@ export default function RoroTracker() {
 
   // Determine player-level live state & active round
   const playerIsLive =
-    tournamentIsLive &&
-    (roro?.rounds.some((r) => isRoundInProgress(r)) ?? false);
+    roro?.rounds.some((r) => r.status === "in_progress") ?? false;
   const effectiveRound = Math.min(
     selectedRound,
     Math.max(courses.length - 1, 0)
@@ -128,7 +122,7 @@ export default function RoroTracker() {
 
   const currentRoundIndex = roro ? roro.currentRound - 1 : -1;
   const heroThru: string | null =
-    roro?.holeThrough && roro.holeThrough.trim() !== "" && roro.holeThrough !== "0"
+    roro?.holeThrough && roro.holeThrough.trim() !== ""
       ? roro.holeThrough
       : getThruCount(roro?.rounds[currentRoundIndex >= 0 ? currentRoundIndex : 0]);
   const scorecardThru = getThruCount(roro?.rounds[effectiveRound]);
@@ -355,7 +349,7 @@ export default function RoroTracker() {
               const round = roro.rounds[i];
               const strokes = roro.strokes[i];
               const score = roro.scores?.[i];
-              const roundIsLive = isRoundInProgress(round);
+              const roundIsLive = round?.status === "in_progress";
               const hasRoundScores = strokes > 0;
               const front = round
                 ? nineHoleTotal(round.strokes, 0, 9)

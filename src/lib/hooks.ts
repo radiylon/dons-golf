@@ -12,17 +12,13 @@ export function useTournaments() {
   });
 }
 
-function isRoundActive(status: string | undefined): boolean {
-  return status === "in_progress" || status === "played";
-}
-
 export function useTeamLeaderboard(tournamentId: string) {
   return useQuery({
     queryKey: ["team-leaderboard", tournamentId],
     queryFn: () => fetchTeamLeaderboard(tournamentId),
     refetchInterval: (query) => {
       const isLive = query.state.data?.results?.some((t) =>
-        t.rounds.some((r) => isRoundActive(r.status))
+        t.rounds.some((r) => r.status === "in_progress")
       );
       return isLive ? POLL_INTERVAL_MS : false;
     },
@@ -35,7 +31,7 @@ export function usePlayerLeaderboard(tournamentId: string) {
     queryFn: () => fetchPlayerLeaderboard(tournamentId),
     refetchInterval: (query) => {
       const isLive = query.state.data?.results?.some((p) =>
-        p.rounds.some((r) => isRoundActive(r.status))
+        p.rounds.some((r) => r.status === "in_progress")
       );
       return isLive ? POLL_INTERVAL_MS : false;
     },

@@ -137,7 +137,7 @@ export default function Scoreboard({
 
   const numRounds = courses.length;
 
-  const isLive = sfTeam?.rounds.some((r) => r.status === "in_progress" || r.status === "played");
+  const isLive = sfTeam?.rounds.some((r) => r.status === "in_progress");
 
   const rawCourseName = courses[0]?.courseName || "Unknown Course";
   const courseName = rawCourseName.replace(/\bTpc\b/g, "TPC");
