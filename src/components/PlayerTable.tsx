@@ -210,7 +210,7 @@ function PlayerCell({
   showSchool?: boolean;
   isSF: boolean;
 }) {
-  const isPlaying = player.rounds.some((r) => r.status === "in_progress");
+  const isPlaying = player.rounds.some((r) => r.status === "in_progress" || r.status === "played");
 
   return (
     <div className="flex items-center gap-2">
