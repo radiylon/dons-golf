@@ -5,7 +5,7 @@ import { SF_SCHOOL_ID, TOURNAMENT_NAME_OVERRIDES } from "@/lib/constants";
 import { formatScore, scoreColor } from "@/lib/format";
 import type { PlayerResult, TeamResult, Course } from "@/lib/types";
 import TeamStandings from "./TeamStandings";
-import DonsPlayers from "./DonsPlayers";
+import PlayerTableSection from "./PlayerTableSection";
 import LastUpdated from "./LastUpdated";
 import PageHeader from "./PageHeader";
 import Link from "next/link";
@@ -16,7 +16,7 @@ export default function Scoreboard({
 }: {
   tournamentId: string;
 }) {
-  const [activeTab, setActiveTab] = useState<"team" | "players">("team");
+  const [activeTab, setActiveTab] = useState<"team" | "individual" | "players">("team");
 
   const tournamentsQuery = useTournaments();
 
@@ -66,6 +66,14 @@ export default function Scoreboard({
 
   const playerRankMap = useMemo(() => computePlayerRanks(players), [players]);
 
+  const sortedAllPlayers = useMemo(() =>
+    [...players].sort((a, b) => {
+      if (a.totalStrokes === 0 && b.totalStrokes === 0) return 0;
+      if (a.totalStrokes === 0) return 1;
+      if (b.totalStrokes === 0) return -1;
+      return a.totalScore - b.totalScore;
+    }), [players]);
+
   const header = <PageHeader title={tournamentName} />;
 
   if (isLoading) {
@@ -77,6 +85,7 @@ export default function Scoreboard({
           <div className="bg-usf-green/20 rounded-xl p-4 h-32" />
           {/* Tab bar skeleton */}
           <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
+            <div className="flex-1 h-9 bg-gray-200 rounded-md" />
             <div className="flex-1 h-9 bg-gray-200 rounded-md" />
             <div className="flex-1 h-9 bg-gray-200 rounded-md" />
           </div>
@@ -233,8 +242,12 @@ export default function Scoreboard({
         <div
           className="absolute top-1 bottom-1 bg-white rounded-md shadow-sm transition-[left] duration-200 ease-out"
           style={{
-            width: "calc(50% - 6px)",
-            left: activeTab === "team" ? "4px" : "calc(50% + 2px)",
+            width: "calc((100% - 16px) / 3)",
+            left: activeTab === "team"
+              ? "4px"
+              : activeTab === "individual"
+                ? "calc(4px + (100% - 8px) / 3)"
+                : "calc(4px + 2 * (100% - 8px) / 3)",
           }}
         />
         <button
@@ -243,7 +256,15 @@ export default function Scoreboard({
             activeTab === "team" ? "text-usf-green" : "text-gray-500 hover:text-gray-700"
           }`}
         >
-          Team Standings
+          Team
+        </button>
+        <button
+          onClick={() => setActiveTab("individual")}
+          className={`relative z-10 flex-1 text-sm font-medium py-2 rounded-md transition-colors duration-200 ${
+            activeTab === "individual" ? "text-usf-green" : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          Individual
         </button>
         <button
           onClick={() => setActiveTab("players")}
@@ -251,21 +272,30 @@ export default function Scoreboard({
             activeTab === "players" ? "text-usf-green" : "text-gray-500 hover:text-gray-700"
           }`}
         >
-          Dons Players
+          Dons
         </button>
       </div>
 
-      <div className={activeTab === "team" ? "" : "hidden"}>
+      {activeTab === "team" && (
         <TeamStandings teams={sortedTeams} numRounds={numRounds} />
-      </div>
+      )}
 
-      <div className={activeTab === "players" ? "" : "hidden"}>
-        <DonsPlayers
+      {activeTab === "individual" && (
+        <PlayerTableSection
+          players={sortedAllPlayers}
+          courses={courses}
+          playerRankMap={playerRankMap}
+          showSchool
+        />
+      )}
+
+      {activeTab === "players" && (
+        <PlayerTableSection
           players={sfPlayers}
           courses={courses}
           playerRankMap={playerRankMap}
         />
-      </div>
+      )}
       </div>
     </>
   );
@@ -283,9 +313,9 @@ function computePlayerRanks(players: PlayerResult[]): Map<string, { rank: number
   const map = new Map<string, { rank: number; isTied: boolean }>();
   for (let i = 0; i < ranked.length; i++) {
     const player = ranked[i];
-    const isTied = ranked.some(
-      (p, j) => j !== i && p.totalScore === player.totalScore
-    );
+    const isTied =
+      (i > 0 && ranked[i - 1].totalScore === player.totalScore) ||
+      (i < ranked.length - 1 && ranked[i + 1].totalScore === player.totalScore);
     map.set(player.playerId, { rank: i + 1, isTied });
   }
   return map;

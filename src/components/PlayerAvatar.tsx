@@ -8,6 +8,7 @@ export default function PlayerAvatar({ player }: { player: PlayerResult }) {
         src={playerPhotoUrl(player.userPicture, 40)}
         alt=""
         className="w-7 h-7 rounded-md object-cover shrink-0"
+        loading="lazy"
       />
     );
   }

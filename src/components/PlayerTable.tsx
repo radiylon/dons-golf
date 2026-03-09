@@ -1,53 +1,27 @@
 "use client";
 
-import { Fragment, useState, useRef, type ReactNode } from "react";
+import { Fragment, useState } from "react";
 import type { PlayerResult, Course } from "@/lib/types";
+import { SF_SCHOOL_ID, schoolLogoUrl } from "@/lib/constants";
 import { formatScore, scoreColor, ordinal, nineHoleTotal } from "@/lib/format";
 import PlayerAvatar from "./PlayerAvatar";
 import PlayerName from "./PlayerName";
 import ExpandedScorecard from "./ExpandedScorecard";
+import CollapsibleRow from "./CollapsibleRow";
+import ChevronIcon from "./ChevronIcon";
 
-function CollapsibleRow({ isExpanded, colSpan, children }: { isExpanded: boolean; colSpan: number; children: ReactNode }) {
-  const hasExpanded = useRef(false);
-  if (isExpanded) hasExpanded.current = true;
-
-  return (
-    <tr>
-      <td colSpan={colSpan} className="p-0">
-        <div className={`grid transition-[grid-template-rows] duration-200 ${isExpanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
-          <div className={`overflow-hidden transition-opacity duration-200 ${isExpanded ? "opacity-100" : "opacity-0"}`}>
-            {hasExpanded.current && children}
-          </div>
-        </div>
-      </td>
-    </tr>
-  );
-}
-
-function ChevronIcon({ isExpanded }: { isExpanded: boolean }) {
-  return (
-    <svg
-      className={`w-3.5 h-3.5 text-gray-300 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={2}
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" d="M6 9l6 6 6-6" />
-    </svg>
-  );
-}
-
-export default function DonsPlayersTable({
+export default function PlayerTable({
   players,
   courses,
   playerRankMap,
   tableRound,
+  showSchool,
 }: {
   players: PlayerResult[];
   courses: Course[];
   playerRankMap: Map<string, { rank: number; isTied: boolean }>;
   tableRound: "total" | number;
+  showSchool?: boolean;
 }) {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
@@ -80,6 +54,7 @@ export default function DonsPlayersTable({
           </thead>
           <tbody className="divide-y divide-gray-50">
             {players.map((player) => {
+              const isSF = !!showSchool && player.schoolId === SF_SCHOOL_ID;
               const hasScores = player.totalStrokes > 0;
               const rankInfo = playerRankMap.get(player.playerId);
               const rank = rankInfo?.rank ?? 0;
@@ -90,15 +65,16 @@ export default function DonsPlayersTable({
                 <Fragment key={player.playerId}>
                   <tr
                     onClick={() => toggle(player.playerId)}
-                    className={`cursor-pointer transition-colors hover:bg-gray-50 ${
-                      isExpanded ? "bg-gray-50" : ""
+                    className={`cursor-pointer transition-colors ${
+                      isSF
+                        ? `bg-usf-green/5 border-l-4 border-l-usf-green ${isExpanded ? "bg-usf-green/10" : "hover:bg-usf-green/10"}`
+                        : showSchool
+                          ? `border-l-4 border-l-transparent ${isExpanded ? "bg-gray-50" : "hover:bg-gray-50"}`
+                          : isExpanded ? "bg-gray-50" : "hover:bg-gray-50"
                     }`}
                   >
                     <td className="py-2.5 px-3">
-                      <div className="flex items-center gap-2">
-                        <PlayerAvatar player={player} />
-                        <PlayerName player={player} />
-                      </div>
+                      <PlayerCell player={player} showSchool={showSchool} isSF={isSF} />
                     </td>
                     {player.strokes.map((strokes, i) => (
                       <td
@@ -159,6 +135,7 @@ export default function DonsPlayersTable({
         </thead>
         <tbody className="divide-y divide-gray-50">
           {players.map((player) => {
+            const isSF = !!showSchool && player.schoolId === SF_SCHOOL_ID;
             const round = player.rounds[roundIndex];
             const strokes = player.strokes[roundIndex];
             const score = player.scores?.[roundIndex];
@@ -170,15 +147,16 @@ export default function DonsPlayersTable({
               <Fragment key={player.playerId}>
                 <tr
                   onClick={() => toggle(player.playerId)}
-                  className={`cursor-pointer transition-colors hover:bg-gray-50 ${
-                    isExpanded ? "bg-gray-50" : ""
+                  className={`cursor-pointer transition-colors ${
+                    isSF
+                      ? `bg-usf-green/5 border-l-4 border-l-usf-green ${isExpanded ? "bg-usf-green/10" : "hover:bg-usf-green/10"}`
+                      : showSchool
+                        ? `border-l-4 border-l-transparent ${isExpanded ? "bg-gray-50" : "hover:bg-gray-50"}`
+                        : isExpanded ? "bg-gray-50" : "hover:bg-gray-50"
                   }`}
                 >
                   <td className="py-2.5 px-3">
-                    <div className="flex items-center gap-2">
-                      <PlayerAvatar player={player} />
-                      <PlayerName player={player} />
-                    </div>
+                    <PlayerCell player={player} showSchool={showSchool} isSF={isSF} />
                   </td>
                   <td className="py-2.5 px-2 text-center tabular-nums text-gray-600">
                     {front ?? "–"}
@@ -212,6 +190,54 @@ export default function DonsPlayersTable({
           })}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+function PlayerCell({
+  player,
+  showSchool,
+  isSF,
+}: {
+  player: PlayerResult;
+  showSchool?: boolean;
+  isSF: boolean;
+}) {
+  const isPlaying = player.rounds.some((r) => r.status === "in_progress");
+
+  return (
+    <div className="flex items-center gap-2">
+      <PlayerAvatar player={player} />
+      {showSchool ? (
+        <div className="min-w-0">
+          <div className="flex items-center gap-1.5">
+            <span className={`font-medium text-sm truncate ${isSF ? "text-usf-green" : ""}`}>
+              {player.playerName}
+            </span>
+            {player.teamLabel === "IND" && (
+              <span className="text-[9px] text-gray-400">IND</span>
+            )}
+            {isPlaying && (
+              <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse shrink-0" />
+            )}
+          </div>
+          <div className="flex items-center gap-1 mt-0.5">
+            {player.schoolLogo ? (
+              <img
+                src={schoolLogoUrl(player.schoolLogo, 24)}
+                alt=""
+                className="w-3.5 h-3.5 object-contain shrink-0"
+                loading="lazy"
+              />
+            ) : (
+              <div className="w-3.5 h-3.5 bg-gray-200 rounded-sm shrink-0" />
+            )}
+            <span className="text-xs text-gray-400 truncate">{player.schoolName}</span>
+          </div>
+        </div>
+      ) : (
+        <PlayerName player={player} />
+      )}
     </div>
   );
 }

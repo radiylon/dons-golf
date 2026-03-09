@@ -2,16 +2,18 @@
 
 import { useState } from "react";
 import type { PlayerResult, Course } from "@/lib/types";
-import DonsPlayersTable from "./DonsPlayersTable";
+import PlayerTable from "./PlayerTable";
 
-export default function DonsPlayers({
+export default function PlayerTableSection({
   players,
   courses,
   playerRankMap,
+  showSchool,
 }: {
   players: PlayerResult[];
   courses: Course[];
   playerRankMap: Map<string, { rank: number; isTied: boolean }>;
+  showSchool?: boolean;
 }) {
   const [tableRound, setTableRound] = useState<"total" | number>("total");
 
@@ -43,11 +45,12 @@ export default function DonsPlayers({
         ))}
       </div>
 
-      <DonsPlayersTable
+      <PlayerTable
         players={players}
         courses={courses}
         playerRankMap={playerRankMap}
         tableRound={tableRound}
+        showSchool={showSchool}
       />
     </div>
   );
