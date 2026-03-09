@@ -7,6 +7,7 @@ import Scoreboard from "@/components/Scoreboard";
 import {
   fetchTeamLeaderboardServer,
   fetchPlayerLeaderboardServer,
+  fetchTournamentsServer,
 } from "@/lib/api";
 
 export default async function TournamentPage({
@@ -19,6 +20,10 @@ export default async function TournamentPage({
   const queryClient = new QueryClient();
 
   await Promise.all([
+    queryClient.prefetchQuery({
+      queryKey: ["tournaments"],
+      queryFn: fetchTournamentsServer,
+    }),
     queryClient.prefetchQuery({
       queryKey: ["team-leaderboard", id],
       queryFn: () => fetchTeamLeaderboardServer(id),
