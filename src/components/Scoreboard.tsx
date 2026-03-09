@@ -171,7 +171,7 @@ export default function Scoreboard({
           </svg>
           All Tournaments
         </Link>
-        <LastUpdated timestamp={lastUpdated} isFetching={isFetching} />
+        {/* <LastUpdated timestamp={lastUpdated} isFetching={isFetching} /> */}
       </div>
 
       <div className="max-w-lg mx-auto pt-2">
