@@ -1,5 +1,5 @@
-import { CLIPPD_API } from "./constants";
-import type { TeamLeaderboard, PlayerLeaderboard, TournamentList } from "./types";
+import { CLIPPD_API, SF_SCHOOL_ID, SEASONS } from "./constants";
+import type { TeamLeaderboard, PlayerLeaderboard, TournamentList, Tournament } from "./types";
 
 export async function fetchTournaments(): Promise<TournamentList> {
   const res = await fetch("/api/tournaments");
@@ -20,6 +20,50 @@ export async function fetchPlayerLeaderboard(tournamentId: string): Promise<Play
 }
 
 /** Server-side fetchers — call Clippd directly, skip the /api proxy */
+
+export async function fetchTournamentsServer(): Promise<TournamentList> {
+  const firstPages = await Promise.all(
+    SEASONS.map((season) =>
+      fetch(
+        `${CLIPPD_API}/tournaments?schoolId=${SF_SCHOOL_ID}&season=${season}&offset=0`,
+        {
+          headers: { "User-Agent": "Mozilla/5.0" },
+          next: { revalidate: 300 },
+        }
+      ).then((r) => (r.ok ? r.json() : { results: [] }))
+    )
+  );
+
+  const secondPages = await Promise.all(
+    firstPages.map((data, i) => {
+      if (data.results?.length >= 10) {
+        return fetch(
+          `${CLIPPD_API}/tournaments?schoolId=${SF_SCHOOL_ID}&season=${SEASONS[i]}&offset=10`,
+          {
+            headers: { "User-Agent": "Mozilla/5.0" },
+            next: { revalidate: 300 },
+          }
+        ).then((r) => (r.ok ? r.json() : { results: [] }));
+      }
+      return Promise.resolve({ results: [] });
+    })
+  );
+
+  const allResults: Tournament[] = [];
+  for (let i = 0; i < SEASONS.length; i++) {
+    allResults.push(...(firstPages[i].results || []));
+    allResults.push(...(secondPages[i].results || []));
+  }
+
+  const seen = new Set<string>();
+  const uniqueResults = allResults.filter((t) => {
+    if (seen.has(t.tournamentId)) return false;
+    seen.add(t.tournamentId);
+    return true;
+  });
+
+  return { results: uniqueResults };
+}
 
 export async function fetchTeamLeaderboardServer(tournamentId: string): Promise<TeamLeaderboard> {
   const res = await fetch(
