@@ -18,11 +18,9 @@ export default function PageHeader({
           />
           <div>
             <h1 className="text-white text-xl font-bold">{title}</h1>
-            {subtitle && (
-              <p className="text-usf-gold text-sm font-medium mt-0.5">
-                {subtitle}
-              </p>
-            )}
+            <p className={`text-usf-gold text-sm font-medium mt-0.5 ${subtitle ? "" : "invisible"}`}>
+              {subtitle || "\u00A0"}
+            </p>
           </div>
         </div>
       </div>

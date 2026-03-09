@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTournaments } from "@/lib/hooks";
@@ -100,24 +101,52 @@ export default function FloatingNav() {
   const tournaments = data?.results ?? [];
   const activeTournamentId = getActiveTournamentId(tournaments);
 
+  const itemRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
+  const [pill, setPill] = useState<{ left: number; width: number } | null>(null);
+
+  useEffect(() => {
+    const activeKey = items.find((item) => {
+      if (item.key === "live" && !activeTournamentId) return false;
+      return item.match(pathname);
+    })?.key;
+
+    if (!activeKey) { setPill(null); return; }
+    const el = itemRefs.current[activeKey];
+    if (!el) { setPill(null); return; }
+
+    setPill({ left: el.offsetLeft, width: el.offsetWidth });
+  }, [pathname, activeTournamentId]);
+
   return (
     <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1 bg-white/80 backdrop-blur-lg border border-gray-200 rounded-full shadow-lg px-2 py-1.5">
+      {/* Sliding pill indicator */}
+      <div
+        className={`absolute rounded-full bg-usf-green transition-all duration-300 ease-out ${pill ? "opacity-100" : "opacity-0"}`}
+        style={pill ? { left: pill.left, width: pill.width, top: 6, bottom: 6 } : undefined}
+      />
       {items.map((item) => {
+        const isHidden = item.key === "live" && !activeTournamentId;
         const href =
           item.key === "live" && activeTournamentId
             ? `/tournament/${activeTournamentId}`
             : item.href;
         const active = item.match(pathname);
         const Icon = icons[item.key];
-        if (item.key === "live" && !activeTournamentId) return null;
 
         return (
           <Link
             key={item.key}
-            href={href}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-full transition-colors ${
+            ref={(el) => { itemRefs.current[item.key] = el; }}
+            href={isHidden ? "#" : href}
+            aria-hidden={isHidden || undefined}
+            tabIndex={isHidden ? -1 : undefined}
+            className={`relative z-10 flex items-center gap-1.5 rounded-full transition-colors duration-200 ${
+              isHidden
+                ? "opacity-0 w-0 overflow-hidden px-0 py-2 pointer-events-none"
+                : "px-4 py-2"
+            } ${
               active
-                ? "bg-usf-green text-white"
+                ? "text-white"
                 : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
             }`}
           >

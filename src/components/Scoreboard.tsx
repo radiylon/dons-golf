@@ -3,13 +3,13 @@
 import { useTournaments, useTeamLeaderboard, usePlayerLeaderboard } from "@/lib/hooks";
 import { SF_SCHOOL_ID, TOURNAMENT_NAME_OVERRIDES } from "@/lib/constants";
 import { formatScore, scoreColor } from "@/lib/format";
-import type { PlayerResult } from "@/lib/types";
+import type { PlayerResult, TeamResult, Course } from "@/lib/types";
 import TeamStandings from "./TeamStandings";
 import DonsPlayers from "./DonsPlayers";
 import LastUpdated from "./LastUpdated";
 import PageHeader from "./PageHeader";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 export default function Scoreboard({
   tournamentId,
@@ -38,16 +38,60 @@ export default function Scoreboard({
 
   const tournamentName = TOURNAMENT_NAME_OVERRIDES[tournamentId] ?? tournamentMeta?.tournamentName ?? "Tournament";
 
+  const teams = teamQuery.data?.results ?? EMPTY_TEAMS;
+  const players = playerQuery.data?.results ?? EMPTY_PLAYERS;
+  const courses = teamQuery.data?.courses ?? EMPTY_COURSES;
+
+  const sortedTeams = useMemo(() =>
+    [...teams].sort((a, b) => {
+      if (a.totalStrokes === 0 && b.totalStrokes === 0) return 0;
+      if (a.totalStrokes === 0) return 1;
+      if (b.totalStrokes === 0) return -1;
+      return a.totalScore - b.totalScore;
+    }), [teams]);
+
+  const sfTeam = useMemo(() => teams.find((t) => t.schoolId === SF_SCHOOL_ID), [teams]);
+
+  const sfPlayers = useMemo(() =>
+    players
+      .filter((p) => p.schoolId === SF_SCHOOL_ID)
+      .sort((a, b) => {
+        if (a.teamLabel === "IND" && b.teamLabel !== "IND") return 1;
+        if (a.teamLabel !== "IND" && b.teamLabel === "IND") return -1;
+        return a.totalScore - b.totalScore;
+      }), [players]);
+
+  const sfRank = useMemo(() =>
+    sortedTeams.findIndex((t) => t.schoolId === SF_SCHOOL_ID) + 1, [sortedTeams]);
+
+  const playerRankMap = useMemo(() => computePlayerRanks(players), [players]);
+
   const header = <PageHeader title={tournamentName} />;
 
   if (isLoading) {
     return (
       <>
         {header}
-        <div className="flex items-center justify-center py-20">
-          <div className="text-center">
-            <div className="w-8 h-8 border-2 border-usf-green border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-            <p className="text-gray-500 text-sm">Loading scores...</p>
+        <div className="max-w-lg mx-auto px-4 pt-4 space-y-4 animate-pulse">
+          {/* SF Banner skeleton */}
+          <div className="bg-usf-green/20 rounded-xl p-4 h-32" />
+          {/* Tab bar skeleton */}
+          <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
+            <div className="flex-1 h-9 bg-gray-200 rounded-md" />
+            <div className="flex-1 h-9 bg-gray-200 rounded-md" />
+          </div>
+          {/* Table skeleton */}
+          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="flex items-center gap-3 px-3 py-3 border-b border-gray-50">
+                <div className="w-8 h-8 bg-gray-200 rounded-full shrink-0" />
+                <div className="flex-1 space-y-1.5">
+                  <div className="h-3.5 bg-gray-200 rounded w-28" />
+                  <div className="h-3 bg-gray-100 rounded w-16" />
+                </div>
+                <div className="h-4 w-10 bg-gray-100 rounded" />
+              </div>
+            ))}
           </div>
         </div>
       </>
@@ -66,10 +110,6 @@ export default function Scoreboard({
       </>
     );
   }
-
-  const teams = teamQuery.data?.results ?? [];
-  const players = playerQuery.data?.results ?? [];
-  const courses = teamQuery.data?.courses ?? [];
 
   const hasData = teams.length > 0;
 
@@ -91,24 +131,6 @@ export default function Scoreboard({
     );
   }
 
-  const sortedTeams = [...teams].sort((a, b) => {
-    if (a.totalStrokes === 0 && b.totalStrokes === 0) return 0;
-    if (a.totalStrokes === 0) return 1;
-    if (b.totalStrokes === 0) return -1;
-    return a.totalScore - b.totalScore;
-  });
-
-  const sfTeam = teams.find((t) => t.schoolId === SF_SCHOOL_ID);
-  const sfPlayers = players
-    .filter((p) => p.schoolId === SF_SCHOOL_ID)
-    .sort((a, b) => {
-      if (a.teamLabel === "IND" && b.teamLabel !== "IND") return 1;
-      if (a.teamLabel !== "IND" && b.teamLabel === "IND") return -1;
-      return a.totalScore - b.totalScore;
-    });
-
-  const sfRank =
-    sortedTeams.findIndex((t) => t.schoolId === SF_SCHOOL_ID) + 1;
   const numRounds = courses.length;
 
   const isLive = sfTeam?.rounds.some((r) => r.status === "in_progress");
@@ -117,8 +139,6 @@ export default function Scoreboard({
   const courseName = rawCourseName.replace(/\bTpc\b/g, "TPC");
   const totalPar = courses[0]?.totalPar || 72;
   const totalYards = courses[0]?.totalYards || 0;
-
-  const playerRankMap = computePlayerRanks(players);
 
   return (
     <>
@@ -209,44 +229,51 @@ export default function Scoreboard({
       </div>
 
       {/* Tabs */}
-      <div className="mx-4 mb-4 flex gap-1 bg-gray-100 rounded-lg p-1">
+      <div className="relative mx-4 mb-4 flex gap-1 bg-gray-100 rounded-lg p-1">
+        <div
+          className="absolute top-1 bottom-1 bg-white rounded-md shadow-sm transition-[left] duration-200 ease-out"
+          style={{
+            width: "calc(50% - 6px)",
+            left: activeTab === "team" ? "4px" : "calc(50% + 2px)",
+          }}
+        />
         <button
           onClick={() => setActiveTab("team")}
-          className={`flex-1 text-sm font-medium py-2 rounded-md transition-colors ${
-            activeTab === "team"
-              ? "bg-white text-usf-green shadow-sm"
-              : "text-gray-500 hover:text-gray-700"
+          className={`relative z-10 flex-1 text-sm font-medium py-2 rounded-md transition-colors duration-200 ${
+            activeTab === "team" ? "text-usf-green" : "text-gray-500 hover:text-gray-700"
           }`}
         >
           Team Standings
         </button>
         <button
           onClick={() => setActiveTab("players")}
-          className={`flex-1 text-sm font-medium py-2 rounded-md transition-colors ${
-            activeTab === "players"
-              ? "bg-white text-usf-green shadow-sm"
-              : "text-gray-500 hover:text-gray-700"
+          className={`relative z-10 flex-1 text-sm font-medium py-2 rounded-md transition-colors duration-200 ${
+            activeTab === "players" ? "text-usf-green" : "text-gray-500 hover:text-gray-700"
           }`}
         >
           Dons Players
         </button>
       </div>
 
-      {activeTab === "team" && (
+      <div className={activeTab === "team" ? "" : "hidden"}>
         <TeamStandings teams={sortedTeams} numRounds={numRounds} />
-      )}
+      </div>
 
-      {activeTab === "players" && (
+      <div className={activeTab === "players" ? "" : "hidden"}>
         <DonsPlayers
           players={sfPlayers}
           courses={courses}
           playerRankMap={playerRankMap}
         />
-      )}
+      </div>
       </div>
     </>
   );
 }
+
+const EMPTY_TEAMS: TeamResult[] = [];
+const EMPTY_PLAYERS: PlayerResult[] = [];
+const EMPTY_COURSES: Course[] = [];
 
 function computePlayerRanks(players: PlayerResult[]): Map<string, { rank: number; isTied: boolean }> {
   const ranked = [...players]
