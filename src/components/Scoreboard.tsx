@@ -153,7 +153,7 @@ export default function Scoreboard({
     <>
       <PageHeader
         title={tournamentName}
-        subtitle={<><span className="font-bold text-white">{courseName}</span>{" · "}Par {totalPar} · {totalYards.toLocaleString()} yards · {numRounds} rounds</>}
+        subtitle={<><span className="font-bold text-white">{courseName}</span>{" · "}Par {totalPar} · {totalYards.toLocaleString()} yards</>}
       />
 
       <div className="max-w-lg mx-auto px-4 py-2 flex items-center justify-between">

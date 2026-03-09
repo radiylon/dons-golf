@@ -67,8 +67,6 @@ export default function TournamentCard({
             </p>
             <p className="text-xs text-gray-400 mt-0.5">
               {formatDateRange(tournament.startDate, tournament.endDate)}
-              {" · "}
-              {tournament.plannedRounds} rounds
             </p>
           </div>
           <svg

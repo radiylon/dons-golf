@@ -229,7 +229,7 @@ export default function RoroTracker() {
                 {courseName}
                 {totalPar ? ` · Par ${totalPar}` : ""}
                 {totalYards ? ` · ${totalYards.toLocaleString()} yards` : ""}
-                {numRounds > 0 ? ` · ${numRounds} rounds` : ""}
+
               </p>
             )}
           </Link>
