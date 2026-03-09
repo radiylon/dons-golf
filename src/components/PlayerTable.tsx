@@ -34,7 +34,7 @@ export default function PlayerTable({
     });
 
   if (tableRound === "total") {
-    const colSpan = 4 + courses.length;
+    const colSpan = 5 + courses.length;
 
     return (
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden overflow-x-auto">
@@ -47,7 +47,8 @@ export default function PlayerTable({
                   R{i + 1}
                 </th>
               ))}
-              <th className="py-2.5 px-2 text-center font-medium">Total</th>
+              <th className="py-2.5 px-2 text-center font-medium">Tot</th>
+              <th className="py-2.5 px-2 text-center font-medium">Score</th>
               <th className="py-2.5 px-2 text-center font-medium">Pos</th>
               <th className="py-2.5 w-8" />
             </tr>
@@ -76,14 +77,20 @@ export default function PlayerTable({
                     <td className="py-2.5 px-3">
                       <PlayerCell player={player} showSchool={showSchool} isSF={isSF} />
                     </td>
-                    {player.strokes.map((strokes, i) => (
-                      <td
-                        key={i}
-                        className={`py-2.5 px-2 text-center tabular-nums ${strokes > 0 ? "text-gray-600" : "text-gray-300"}`}
-                      >
-                        {strokes > 0 ? strokes : "–"}
-                      </td>
-                    ))}
+                    {courses.map((_, i) => {
+                      const strokes = player.strokes[i];
+                      return (
+                        <td
+                          key={i}
+                          className={`py-2.5 px-2 text-center tabular-nums ${strokes > 0 ? "text-gray-600" : "text-gray-300"}`}
+                        >
+                          {strokes > 0 ? strokes : "–"}
+                        </td>
+                      );
+                    })}
+                    <td className="py-2.5 px-2 text-center tabular-nums font-semibold text-gray-600">
+                      {hasScores ? player.totalStrokes : "–"}
+                    </td>
                     <td
                       className={`py-2.5 px-2 text-center tabular-nums font-semibold ${
                         hasScores ? scoreColor(player.totalScore) : "text-gray-300"
