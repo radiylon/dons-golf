@@ -5,10 +5,10 @@
   --color-usf-green-light: #007A56;
   --color-usf-gold: #FDBB30;
   --color-usf-gold-light: #FDD06A;
-  --color-eagle: #d4a017;
+  --color-eagle: #dc2626;
   --color-birdie: #dc2626;
-  --color-bogey: #1d4ed8;
-  --color-double: #1e3a5f;
+  --color-bogey: #1a1a1a;
+  --color-double: #1a1a1a;
 }
 
 @layer base {

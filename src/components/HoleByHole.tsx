@@ -3,10 +3,10 @@ import type { PlayerRound, Course } from "@/lib/types";
 function holeScoreClass(score: number | null, par: number): string {
   if (score === null) return "";
   const diff = score - par;
-  if (diff <= -2) return "bg-eagle text-white rounded-full";
+  if (diff <= -2) return "bg-eagle text-white rounded-full ring-2 ring-eagle ring-offset-1";
   if (diff === -1) return "bg-birdie text-white rounded-full";
-  if (diff === 1) return "bg-bogey text-white rounded-full";
-  if (diff >= 2) return "bg-double text-white rounded-full";
+  if (diff === 1) return "bg-bogey text-white rounded-sm";
+  if (diff >= 2) return "bg-double text-white rounded-sm ring-2 ring-double ring-offset-1";
   return "";
 }
 
