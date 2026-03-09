@@ -14,7 +14,7 @@ import { HoleByHole, NineHoles } from "./HoleByHole";
 import LastUpdated from "./LastUpdated";
 import PageHeader from "./PageHeader";
 import Link from "next/link";
-import type { Tournament, PlayerResult } from "@/lib/types";
+import type { Tournament, PlayerResult, PlayerRound } from "@/lib/types";
 
 const CLASS_YEARS = ["Freshman", "Sophomore", "Junior", "Senior"] as const;
 
@@ -76,6 +76,13 @@ function computeRank(
   return { rank, total, isTied };
 }
 
+function getThruCount(round: PlayerRound | undefined): string | null {
+  if (!round || round.status !== "in_progress") return null;
+  if (round.thru && round.thru.trim() !== "") return round.thru;
+  const played = round.strokes.filter((s) => s !== null).length;
+  return played > 0 ? String(played) : null;
+}
+
 export default function RoroTracker() {
   const [selectedRound, setSelectedRound] = useState<number>(0);
 
@@ -112,6 +119,13 @@ export default function RoroTracker() {
 
   const hasScores = roro ? roro.totalStrokes > 0 : false;
   const rankInfo = roro && hasScores ? computeRank(roro, allPlayers) : null;
+
+  const currentRoundIndex = roro ? roro.currentRound - 1 : -1;
+  const heroThru: string | null =
+    roro?.holeThrough && roro.holeThrough.trim() !== ""
+      ? roro.holeThrough
+      : getThruCount(roro?.rounds[currentRoundIndex >= 0 ? currentRoundIndex : 0]);
+  const scorecardThru = getThruCount(roro?.rounds[effectiveRound]);
 
   // Course info
   const rawCourseName = courses[0]?.courseName || "";
@@ -259,9 +273,9 @@ export default function RoroTracker() {
                     <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
                     Live
                   </span>
-                  {roro.holeThrough && (
+                  {heroThru && (
                     <span className="text-xs text-gray-400">
-                      Thru {roro.holeThrough}
+                      Thru {heroThru}
                     </span>
                   )}
                 </div>
@@ -396,12 +410,11 @@ export default function RoroTracker() {
               <span className="text-sm font-semibold text-gray-900">
                 Round {effectiveRound + 1}
               </span>
-              {roro?.rounds[effectiveRound]?.status === "in_progress" &&
-                roro.rounds[effectiveRound]?.thru && (
-                  <span className="text-xs text-gray-400">
-                    Thru {roro.rounds[effectiveRound].thru}
-                  </span>
-                )}
+              {scorecardThru && (
+                <span className="text-xs text-gray-400">
+                  Thru {scorecardThru}
+                </span>
+              )}
             </div>
             {roro?.rounds[effectiveRound]?.strokes.some(
               (s) => s !== null
