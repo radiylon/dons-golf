@@ -65,7 +65,7 @@ export default function TournamentList() {
             <button
               key={season}
               onClick={() => setSelectedSeason(season)}
-              className={`text-xs px-3 py-1.5 rounded-full font-medium whitespace-nowrap transition-colors ${
+              className={`text-xs px-3 py-1.5 rounded-full font-medium whitespace-nowrap cursor-pointer ${
                 activeSeason === season
                   ? "bg-usf-green text-white"
                   : "bg-gray-100 text-gray-500 hover:bg-gray-200"

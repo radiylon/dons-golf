@@ -32,7 +32,7 @@ const items = [
   {
     key: "roro",
     href: "/roro",
-    label: "Roro",
+    label: "RoRo",
     match: (p: string) => p === "/roro",
   },
 ] as const;
@@ -139,7 +139,7 @@ export default function FloatingNav() {
     <nav className="fixed left-1/2 -translate-x-1/2 z-50 flex items-center gap-1 bg-white/80 backdrop-blur-lg border border-gray-200 rounded-full shadow-lg px-2 py-1.5" style={{ bottom: "calc(12px + env(safe-area-inset-bottom, 12px))" }}>
       {/* Sliding pill indicator */}
       <div
-        className={`absolute rounded-full bg-usf-green transition-all duration-300 ease-out ${pill ? "opacity-100" : "opacity-0"}`}
+        className={`absolute rounded-full bg-usf-green transition-all duration-75 ${pill ? "opacity-100" : "opacity-0"}`}
         style={pill ? { left: pill.left, width: pill.width, top: 6, bottom: 6 } : undefined}
       />
       {items.map((item) => {
@@ -158,7 +158,7 @@ export default function FloatingNav() {
             href={isHidden ? "#" : href}
             aria-hidden={isHidden || undefined}
             tabIndex={isHidden ? -1 : undefined}
-            className={`relative z-10 flex items-center gap-1.5 rounded-full transition-colors duration-200 ${
+            className={`relative z-10 flex items-center gap-1.5 rounded-full ${
               isHidden
                 ? "opacity-0 w-0 overflow-hidden px-0 py-2 pointer-events-none"
                 : "px-4 py-2"

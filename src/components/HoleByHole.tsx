@@ -14,14 +14,18 @@ export function NineHoles({
   holes,
   pars,
   strokes,
+  yards,
 }: {
   holes: { start: number; end: number; label: string };
   pars: number[];
   strokes: (number | null)[];
+  yards?: number[];
 }) {
   const holePars = pars.slice(holes.start, holes.end);
   const holeStrokes = strokes.slice(holes.start, holes.end);
+  const holeYards = yards?.slice(holes.start, holes.end);
   const totalPar = holePars.reduce((a, b) => a + b, 0);
+  const totalYards = holeYards?.reduce((a, b) => a + b, 0);
   const playedStrokes = holeStrokes.filter(
     (stroke) => stroke !== null
   ) as number[];
@@ -57,6 +61,19 @@ export function NineHoles({
             {totalPar}
           </td>
         </tr>
+        {holeYards && (
+          <tr className="text-gray-300 text-[10px]">
+            <td className="py-0.5 text-left font-medium">Yds</td>
+            {holeYards.map((yd, i) => (
+              <td key={i} className="py-0.5 text-center">
+                {yd}
+              </td>
+            ))}
+            <td className="py-0.5 text-center border-l border-gray-100">
+              {totalYards}
+            </td>
+          </tr>
+        )}
         <tr>
           <td className="py-1 text-left font-medium text-gray-500">Score</td>
           {holeStrokes.map((stroke, i) => (
@@ -111,8 +128,8 @@ export function HoleByHole({
 
   return (
     <div className="px-4 py-3 space-y-2 overflow-x-auto">
-      <NineHoles holes={front9} pars={course.pars} strokes={round.strokes} />
-      <NineHoles holes={back9} pars={course.pars} strokes={round.strokes} />
+      <NineHoles holes={front9} pars={course.pars} strokes={round.strokes} yards={course.yards} />
+      <NineHoles holes={back9} pars={course.pars} strokes={round.strokes} yards={course.yards} />
     </div>
   );
 }

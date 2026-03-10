@@ -44,12 +44,12 @@ function TeamRow({
       {team.strokes.map((strokes, i) => (
         <td
           key={i}
-          className="py-2.5 px-2 text-center tabular-nums text-gray-500 hidden sm:table-cell"
+          className="py-2.5 px-2 text-center tabular-nums text-gray-500"
         >
           {strokes > 0 ? strokes : "–"}
         </td>
       ))}
-      <td className="py-2.5 px-2 text-center tabular-nums hidden sm:table-cell">
+      <td className="py-2.5 px-2 text-center tabular-nums">
         {team.totalStrokes > 0 ? team.totalStrokes : "–"}
       </td>
     </tr>
@@ -76,12 +76,12 @@ export default function TeamStandings({
             {Array.from({ length: numRounds }, (_, i) => (
               <th
                 key={i}
-                className="py-2.5 px-2 text-center font-medium hidden sm:table-cell"
+                className="py-2.5 px-2 text-center font-medium"
               >
                 R{i + 1}
               </th>
             ))}
-            <th className="py-2.5 px-2 text-center font-medium hidden sm:table-cell">
+            <th className="py-2.5 px-2 text-center font-medium">
               Tot
             </th>
           </tr>

@@ -36,7 +36,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="bg-gray-50 text-gray-900 antialiased">
         <Providers>
-          {children}
+          <div className="pb-8">{children}</div>
           <FloatingNav />
         </Providers>
       </body>

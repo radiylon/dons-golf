@@ -8,7 +8,7 @@ export default function PageHeader({
   subtitle?: ReactNode;
 }) {
   return (
-    <header className="bg-usf-green px-4 pt-12 pb-5 mb-4">
+    <header className="bg-usf-green px-4 pt-12 pb-5 mb-4" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 3rem)" }}>
       <div className="max-w-lg mx-auto">
         <div className="flex items-center gap-3">
           <img

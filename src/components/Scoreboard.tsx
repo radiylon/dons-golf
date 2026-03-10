@@ -2,7 +2,7 @@
 
 import { useTournaments, useTeamLeaderboard, usePlayerLeaderboard } from "@/lib/hooks";
 import { SF_SCHOOL_ID, TOURNAMENT_NAME_OVERRIDES } from "@/lib/constants";
-import { formatScore, scoreColor } from "@/lib/format";
+import { formatScore, scoreColor, ordinal } from "@/lib/format";
 import type { PlayerResult, TeamResult, Course } from "@/lib/types";
 import TeamStandings from "./TeamStandings";
 import PlayerTableSection from "./PlayerTableSection";
@@ -10,6 +10,10 @@ import LastUpdated from "./LastUpdated";
 import PageHeader from "./PageHeader";
 import Link from "next/link";
 import { useState, useMemo } from "react";
+
+const EMPTY_TEAMS: TeamResult[] = [];
+const EMPTY_PLAYERS: PlayerResult[] = [];
+const EMPTY_COURSES: Course[] = [];
 
 export default function Scoreboard({
   tournamentId,
@@ -61,8 +65,14 @@ export default function Scoreboard({
         return a.totalScore - b.totalScore;
       }), [players]);
 
-  const sfRank = useMemo(() =>
-    sortedTeams.findIndex((t) => t.schoolId === SF_SCHOOL_ID) + 1, [sortedTeams]);
+  const sfRankInfo = useMemo(() => {
+    const idx = sortedTeams.findIndex((t) => t.schoolId === SF_SCHOOL_ID);
+    if (idx === -1) return { rank: 0, isTied: false, total: sortedTeams.length };
+    const rank = idx + 1;
+    const score = sortedTeams[idx].totalScore;
+    const isTied = sortedTeams.some((t, i) => i !== idx && t.totalStrokes > 0 && t.totalScore === score);
+    return { rank, isTied, total: sortedTeams.length };
+  }, [sortedTeams]);
 
   const { rankMap: playerRankMap, sorted: sortedAllPlayers } = useMemo(
     () => computePlayerRanks(players),
@@ -151,154 +161,132 @@ export default function Scoreboard({
         subtitle={<><span className="font-bold text-white">{courseName}</span>{" · "}Par {totalPar} · {totalYards.toLocaleString()} yards</>}
       />
 
-      <div className="max-w-lg mx-auto px-4 py-2 flex items-center justify-between">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-1 text-gray-400 text-xs hover:text-gray-600 transition-colors"
-        >
-          <svg
-            className="w-3.5 h-3.5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
-          All Tournaments
-        </Link>
-        {/* <LastUpdated timestamp={lastUpdated} isFetching={isFetching} /> */}
+      <div className="max-w-lg mx-auto px-4 py-2 flex items-center justify-center">
+        <LastUpdated timestamp={lastUpdated} isFetching={isFetching} />
       </div>
 
       <div className="max-w-lg mx-auto pt-2">
-
-      {/* SF Summary Banner */}
-      <div className="mx-4 mb-4 bg-usf-green rounded-xl p-4 text-white">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-usf-gold text-xs font-medium uppercase tracking-wider">
-              San Francisco Dons
-            </p>
-            <p className="text-3xl font-bold tabular-nums mt-0.5">
-              {sfTeam && sfTeam.totalStrokes > 0
-                ? formatScore(sfTeam.totalScore)
-                : "–"}
-            </p>
-          </div>
-          <div className="text-right">
-            <p className="text-white text-xs uppercase">Team Position</p>
-            {sfTeam && sfTeam.totalStrokes > 0 ? (
-              <p className="text-3xl font-bold tabular-nums mt-0.5">
-                {sfRank}
-                <span className="font-normal text-white/50">
-                  /{sortedTeams.length}
-                </span>
+        {/* SF Summary Banner */}
+        <div className="mx-4 mb-4 bg-usf-green rounded-xl p-4 text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-usf-gold text-xs font-medium uppercase tracking-wider">
+                San Francisco Dons
               </p>
-            ) : (
-              <p className="text-3xl font-bold tabular-nums">–</p>
-            )}
-          </div>
-        </div>
-        {sfTeam && sfTeam.totalStrokes > 0 && (
-          <div className="mt-3 flex gap-3 text-sm">
-            {sfTeam.strokes.map((strokes, i) => (
-              <div
-                key={i}
-                className="bg-white/10 rounded-lg px-3 py-1.5 text-center"
-              >
-                <p className="text-white/50 text-xs">R{i + 1}</p>
-                <p className="font-semibold tabular-nums">{strokes > 0 ? strokes : "–"}</p>
-              </div>
-            ))}
-            <div className="bg-white/10 rounded-lg px-3 py-1.5 text-center">
-              <p className="text-white/50 text-xs">Total</p>
-              <p className="font-semibold tabular-nums">
-                {sfTeam.totalStrokes}
+              <p className="text-3xl font-bold tabular-nums mt-0.5">
+                {sfTeam && sfTeam.totalStrokes > 0
+                  ? formatScore(sfTeam.totalScore)
+                  : "–"}
               </p>
             </div>
+            <div className="text-right">
+              <p className="text-white text-xs uppercase font-medium tracking-wider">Team Position</p>
+              {sfTeam && sfTeam.totalStrokes > 0 && sfRankInfo.rank > 0 ? (
+                <p className="text-3xl font-bold tabular-nums mt-0.5">
+                  {sfRankInfo.isTied ? "T" : ""}
+                  {ordinal(sfRankInfo.rank)}
+                  <span className="font-normal text-white/50">
+                    {" "}of {sfRankInfo.total}
+                  </span>
+                </p>
+              ) : (
+                <p className="text-3xl font-bold tabular-nums">–</p>
+              )}
+            </div>
           </div>
+          {sfTeam && sfTeam.totalStrokes > 0 && (
+            <div className="mt-3 flex gap-3 text-sm">
+              {sfTeam.strokes.map((strokes, i) => (
+                <div
+                  key={i}
+                  className="bg-white/10 rounded-lg px-3 py-1.5 text-center"
+                >
+                  <p className="text-white/50 text-xs">R{i + 1}</p>
+                  <p className="font-semibold tabular-nums">{strokes > 0 ? strokes : "–"}</p>
+                </div>
+              ))}
+              <div className="bg-white/10 rounded-lg px-3 py-1.5 text-center">
+                <p className="text-white/50 text-xs">Total</p>
+                <p className="font-semibold tabular-nums">
+                  {sfTeam.totalStrokes}
+                </p>
+              </div>
+            </div>
+          )}
+          {isLive && (
+            <div className="mt-3">
+              <span className="inline-flex items-center gap-1.5 text-xs bg-red-500/20 text-red-300 px-2 py-0.5 rounded-full">
+                <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
+                LIVE
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Tabs */}
+        <div className="relative mx-4 mb-4 flex gap-1 bg-gray-100 rounded-lg p-1">
+          <div
+            className="absolute top-1 bottom-1 bg-white rounded-md shadow-sm transition-[left] duration-75"
+            style={{
+              width: "calc((100% - 16px) / 3)",
+              left: activeTab === "team"
+                ? "4px"
+                : activeTab === "individual"
+                  ? "calc(4px + (100% - 8px) / 3)"
+                  : "calc(4px + 2 * (100% - 8px) / 3)",
+            }}
+          />
+          <button
+            onClick={() => setActiveTab("team")}
+            className={`relative z-10 flex-1 text-sm font-medium py-2 rounded-md cursor-pointer ${
+              activeTab === "team" ? "text-usf-green" : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            Team
+          </button>
+          <button
+            onClick={() => setActiveTab("individual")}
+            className={`relative z-10 flex-1 text-sm font-medium py-2 rounded-md cursor-pointer ${
+              activeTab === "individual" ? "text-usf-green" : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            Individual
+          </button>
+          <button
+            onClick={() => setActiveTab("players")}
+            className={`relative z-10 flex-1 text-sm font-medium py-2 rounded-md cursor-pointer ${
+              activeTab === "players" ? "text-usf-green" : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            Dons
+          </button>
+        </div>
+
+        {activeTab === "team" && (
+          <TeamStandings teams={sortedTeams} numRounds={numRounds} />
         )}
-        {isLive && (
-          <div className="mt-3">
-            <span className="inline-flex items-center gap-1.5 text-xs bg-red-500/20 text-red-300 px-2 py-0.5 rounded-full">
-              <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
-              LIVE
-            </span>
-          </div>
+
+        {activeTab === "individual" && (
+          <PlayerTableSection
+            players={sortedAllPlayers}
+            courses={courses}
+            playerRankMap={playerRankMap}
+            showSchool
+          />
         )}
-      </div>
 
-      {/* Tabs */}
-      <div className="relative mx-4 mb-4 flex gap-1 bg-gray-100 rounded-lg p-1">
-        <div
-          className="absolute top-1 bottom-1 bg-white rounded-md shadow-sm transition-[left] duration-200 ease-out"
-          style={{
-            width: "calc((100% - 16px) / 3)",
-            left: activeTab === "team"
-              ? "4px"
-              : activeTab === "individual"
-                ? "calc(4px + (100% - 8px) / 3)"
-                : "calc(4px + 2 * (100% - 8px) / 3)",
-          }}
-        />
-        <button
-          onClick={() => setActiveTab("team")}
-          className={`relative z-10 flex-1 text-sm font-medium py-2 rounded-md transition-colors duration-200 ${
-            activeTab === "team" ? "text-usf-green" : "text-gray-500 hover:text-gray-700"
-          }`}
-        >
-          Team
-        </button>
-        <button
-          onClick={() => setActiveTab("individual")}
-          className={`relative z-10 flex-1 text-sm font-medium py-2 rounded-md transition-colors duration-200 ${
-            activeTab === "individual" ? "text-usf-green" : "text-gray-500 hover:text-gray-700"
-          }`}
-        >
-          Individual
-        </button>
-        <button
-          onClick={() => setActiveTab("players")}
-          className={`relative z-10 flex-1 text-sm font-medium py-2 rounded-md transition-colors duration-200 ${
-            activeTab === "players" ? "text-usf-green" : "text-gray-500 hover:text-gray-700"
-          }`}
-        >
-          Dons
-        </button>
-      </div>
-
-      {activeTab === "team" && (
-        <TeamStandings teams={sortedTeams} numRounds={numRounds} />
-      )}
-
-      {activeTab === "individual" && (
-        <PlayerTableSection
-          players={sortedAllPlayers}
-          courses={courses}
-          playerRankMap={playerRankMap}
-          showSchool
-        />
-      )}
-
-      {activeTab === "players" && (
-        <PlayerTableSection
-          players={sfPlayers}
-          courses={courses}
-          playerRankMap={playerRankMap}
-        />
-      )}
+        {activeTab === "players" && (
+          <PlayerTableSection
+            players={sfPlayers}
+            courses={courses}
+            playerRankMap={playerRankMap}
+            showSchool
+          />
+        )}
       </div>
     </>
   );
 }
-
-const EMPTY_TEAMS: TeamResult[] = [];
-const EMPTY_PLAYERS: PlayerResult[] = [];
-const EMPTY_COURSES: Course[] = [];
 
 function computePlayerRanks(players: PlayerResult[]): {
   rankMap: Map<string, { rank: number; isTied: boolean }>;

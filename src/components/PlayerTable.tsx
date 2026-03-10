@@ -8,7 +8,6 @@ import PlayerAvatar from "./PlayerAvatar";
 import PlayerName from "./PlayerName";
 import ExpandedScorecard from "./ExpandedScorecard";
 import CollapsibleRow from "./CollapsibleRow";
-import ChevronIcon from "./ChevronIcon";
 
 export default function PlayerTable({
   players,
@@ -33,24 +32,25 @@ export default function PlayerTable({
       return next;
     });
 
+  // Total view: Player | R1 | R2 | R3 | Tot | Score | Pos
+  // Fixed widths: 3×w-10 + w-10 + w-11 + w-13 = 256px → Player gets remainder
   if (tableRound === "total") {
-    const colSpan = 5 + courses.length;
+    const colSpan = 4 + courses.length;
 
     return (
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden overflow-x-auto">
-        <table className="w-full text-sm">
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <table className="w-full text-sm table-fixed">
           <thead>
             <tr className="border-b border-gray-100 text-gray-400 text-xs uppercase tracking-wider">
               <th className="py-2.5 px-3 text-left font-medium">Player</th>
               {courses.map((_, i) => (
-                <th key={i} className="py-2.5 px-2 text-center font-medium">
+                <th key={i} className="py-2.5 px-1 text-center font-medium w-10">
                   R{i + 1}
                 </th>
               ))}
-              <th className="py-2.5 px-2 text-center font-medium">Tot</th>
-              <th className="py-2.5 px-2 text-center font-medium">Score</th>
-              <th className="py-2.5 px-2 text-center font-medium">Pos</th>
-              <th className="py-2.5 w-8" />
+              <th className="py-2.5 px-1 text-center font-medium w-10">Tot</th>
+              <th className="py-2.5 px-1 text-center font-medium w-11">Score</th>
+              <th className="py-2.5 px-1 pr-3 w-13" />
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
@@ -66,15 +66,13 @@ export default function PlayerTable({
                 <Fragment key={player.playerId}>
                   <tr
                     onClick={() => toggle(player.playerId)}
-                    className={`cursor-pointer transition-colors ${
+                    className={`cursor-pointer ${
                       isSF
-                        ? `bg-usf-green/5 border-l-4 border-l-usf-green ${isExpanded ? "bg-usf-green/10" : "hover:bg-usf-green/10"}`
-                        : showSchool
-                          ? `border-l-4 border-l-transparent ${isExpanded ? "bg-gray-50" : "hover:bg-gray-50"}`
-                          : isExpanded ? "bg-gray-50" : "hover:bg-gray-50"
+                        ? isExpanded ? "bg-usf-green/10" : "bg-usf-green/5 hover:bg-usf-green/10"
+                        : isExpanded ? "bg-gray-50" : "hover:bg-gray-50"
                     }`}
                   >
-                    <td className="py-2.5 px-3">
+                    <td className="py-2.5 px-3 overflow-hidden">
                       <PlayerCell player={player} showSchool={showSchool} isSF={isSF} />
                     </td>
                     {courses.map((_, i) => {
@@ -82,29 +80,26 @@ export default function PlayerTable({
                       return (
                         <td
                           key={i}
-                          className={`py-2.5 px-2 text-center tabular-nums ${strokes > 0 ? "text-gray-600" : "text-gray-300"}`}
+                          className={`py-2.5 px-1 text-center text-xs tabular-nums ${strokes > 0 ? "text-gray-600" : "text-gray-300"}`}
                         >
                           {strokes > 0 ? strokes : "–"}
                         </td>
                       );
                     })}
-                    <td className="py-2.5 px-2 text-center tabular-nums font-semibold text-gray-600">
+                    <td className="py-2.5 px-1 text-center text-xs tabular-nums font-semibold text-gray-600">
                       {hasScores ? player.totalStrokes : "–"}
                     </td>
                     <td
-                      className={`py-2.5 px-2 text-center tabular-nums font-semibold ${
+                      className={`py-2.5 px-1 text-center text-xs tabular-nums font-semibold ${
                         hasScores ? scoreColor(player.totalScore) : "text-gray-300"
                       }`}
                     >
                       {hasScores ? formatScore(player.totalScore) : "–"}
                     </td>
-                    <td className="py-2.5 px-2 text-center tabular-nums text-gray-500">
+                    <td className="py-2.5 px-1 pr-3 text-center text-xs tabular-nums text-gray-500">
                       {rank > 0
                         ? `${isTied ? "T" : ""}${ordinal(rank)}`
                         : "–"}
-                    </td>
-                    <td className="py-2.5 pr-3 text-center">
-                      <ChevronIcon isExpanded={isExpanded} />
                     </td>
                   </tr>
                   <CollapsibleRow isExpanded={isExpanded} colSpan={colSpan}>
@@ -123,21 +118,21 @@ export default function PlayerTable({
     );
   }
 
-  // Round view
+  // Round view: Player | Out | In | Tot | Score
+  // Fixed widths: 4×w-16 = 256px → matches total view so Player gets same space
   const roundIndex = tableRound as number;
-  const colSpan = 6;
+  const colSpan = 5;
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden overflow-x-auto">
-      <table className="w-full text-sm">
+    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <table className="w-full text-sm table-fixed">
         <thead>
           <tr className="border-b border-gray-100 text-gray-400 text-xs uppercase tracking-wider">
             <th className="py-2.5 px-3 text-left font-medium">Player</th>
-            <th className="py-2.5 px-2 text-center font-medium">Front</th>
-            <th className="py-2.5 px-2 text-center font-medium">Back</th>
-            <th className="py-2.5 px-2 text-center font-medium">Strokes</th>
-            <th className="py-2.5 px-2 text-center font-medium">Score</th>
-            <th className="py-2.5 w-8" />
+            <th className="py-2.5 px-1 text-center font-medium w-16">Out</th>
+            <th className="py-2.5 px-1 text-center font-medium w-16">In</th>
+            <th className="py-2.5 px-1 text-center font-medium w-16">Tot</th>
+            <th className="py-2.5 px-1 pr-3 text-center font-medium w-16">Score</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-50">
@@ -154,35 +149,30 @@ export default function PlayerTable({
               <Fragment key={player.playerId}>
                 <tr
                   onClick={() => toggle(player.playerId)}
-                  className={`cursor-pointer transition-colors ${
+                  className={`cursor-pointer ${
                     isSF
-                      ? `bg-usf-green/5 border-l-4 border-l-usf-green ${isExpanded ? "bg-usf-green/10" : "hover:bg-usf-green/10"}`
-                      : showSchool
-                        ? `border-l-4 border-l-transparent ${isExpanded ? "bg-gray-50" : "hover:bg-gray-50"}`
-                        : isExpanded ? "bg-gray-50" : "hover:bg-gray-50"
+                      ? isExpanded ? "bg-usf-green/10" : "bg-usf-green/5 hover:bg-usf-green/10"
+                      : isExpanded ? "bg-gray-50" : "hover:bg-gray-50"
                   }`}
                 >
-                  <td className="py-2.5 px-3">
+                  <td className="py-2.5 px-3 overflow-hidden">
                     <PlayerCell player={player} showSchool={showSchool} isSF={isSF} />
                   </td>
-                  <td className="py-2.5 px-2 text-center tabular-nums text-gray-600">
+                  <td className="py-2.5 px-1 text-center text-xs tabular-nums text-gray-600">
                     {front ?? "–"}
                   </td>
-                  <td className="py-2.5 px-2 text-center tabular-nums text-gray-600">
+                  <td className="py-2.5 px-1 text-center text-xs tabular-nums text-gray-600">
                     {back ?? "–"}
                   </td>
-                  <td className="py-2.5 px-2 text-center tabular-nums text-gray-600">
+                  <td className="py-2.5 px-1 text-center text-xs tabular-nums text-gray-600">
                     {strokes > 0 ? strokes : "–"}
                   </td>
                   <td
-                    className={`py-2.5 px-2 text-center tabular-nums font-semibold ${
+                    className={`py-2.5 px-1 pr-3 text-center text-xs tabular-nums font-semibold ${
                       score != null && strokes > 0 ? scoreColor(score) : "text-gray-300"
                     }`}
                   >
                     {score != null && strokes > 0 ? formatScore(score) : "–"}
-                  </td>
-                  <td className="py-2.5 pr-3 text-center">
-                    <ChevronIcon isExpanded={isExpanded} />
                   </td>
                 </tr>
                 <CollapsibleRow isExpanded={isExpanded} colSpan={colSpan}>

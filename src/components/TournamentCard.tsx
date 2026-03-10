@@ -47,7 +47,7 @@ export default function TournamentCard({
   return (
     <Link
       href={`/tournament/${tournament.tournamentId}`}
-      className={`block bg-white rounded-xl border overflow-hidden transition-all hover:shadow-md ${
+      className={`block bg-white rounded-xl border overflow-hidden hover:shadow-md ${
         status === "live"
           ? "border-red-200 ring-1 ring-red-100"
           : status === "upcoming"

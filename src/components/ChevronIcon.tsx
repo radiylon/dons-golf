@@ -1,7 +1,7 @@
 export default function ChevronIcon({ isExpanded }: { isExpanded: boolean }) {
   return (
     <svg
-      className={`w-3.5 h-3.5 text-gray-300 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
+      className={`w-3.5 h-3.5 text-gray-300 transition-transform duration-100 ${isExpanded ? "rotate-180" : ""}`}
       fill="none"
       viewBox="0 0 24 24"
       stroke="currentColor"

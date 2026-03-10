@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useTournaments, usePlayerLeaderboard } from "@/lib/hooks";
 import {
   SF_SCHOOL_ID,
@@ -77,8 +76,6 @@ function computeRank(
 }
 
 export default function RoroTracker() {
-  const [selectedRound, setSelectedRound] = useState<number>(0);
-
   const tournamentsQuery = useTournaments();
   const tournaments = tournamentsQuery.data?.results ?? [];
 
@@ -102,13 +99,9 @@ export default function RoroTracker() {
     (t) => t.tournamentId === activeTournamentId
   );
 
-  // Determine player-level live state & active round
+  // Determine player-level live state
   const playerIsLive =
     roro?.rounds.some((r) => r.status === "in_progress") ?? false;
-  const effectiveRound = Math.min(
-    selectedRound,
-    Math.max(courses.length - 1, 0)
-  );
 
   const hasScores = roro ? roro.totalStrokes > 0 : false;
   const rankInfo = roro && hasScores ? computeRank(roro, allPlayers) : null;
@@ -196,7 +189,7 @@ export default function RoroTracker() {
         {activeTournament && (
           <Link
             href={`/tournament/${activeTournamentId}`}
-            className="block mb-4 bg-white border border-gray-200 rounded-xl px-4 py-3 hover:border-gray-300 transition-colors"
+            className="block mb-4 bg-white border border-gray-200 rounded-xl px-4 py-3 hover:border-gray-300"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 min-w-0">
@@ -293,6 +286,18 @@ export default function RoroTracker() {
             </div>
             <div className="py-3 text-center">
               <p className="text-white/60 text-[10px] uppercase tracking-wider font-medium">
+                Strokes
+              </p>
+              <p
+                className={`text-xl font-bold tabular-nums mt-0.5 ${
+                  hasScores ? "text-white" : "text-white/40"
+                }`}
+              >
+                {hasScores ? roro!.totalStrokes : "–"}
+              </p>
+            </div>
+            <div className="py-3 text-center">
+              <p className="text-white/60 text-[10px] uppercase tracking-wider font-medium">
                 Position
               </p>
               <p
@@ -304,8 +309,8 @@ export default function RoroTracker() {
                   <>
                     {rankInfo.isTied ? "T" : ""}
                     {ordinal(rankInfo.rank)}
-                    <span className="font-normal text-white/50 text-sm">
-                      /{rankInfo.total}
+                    <span className="font-normal text-white/50">
+                      {" "}of {rankInfo.total}
                     </span>
                   </>
                 ) : (
@@ -313,24 +318,12 @@ export default function RoroTracker() {
                 )}
               </p>
             </div>
-            <div className="py-3 text-center">
-              <p className="text-white/60 text-[10px] uppercase tracking-wider font-medium">
-                Strokes
-              </p>
-              <p
-                className={`text-xl font-bold tabular-nums mt-0.5 ${
-                  hasScores ? "text-white" : "text-white/40"
-                }`}
-              >
-                {hasScores ? roro!.totalStrokes : "–"}
-              </p>
-            </div>
           </div>
         </div>
 
         {/* Round Summary Cards */}
         {roro && courses.length > 0 && (
-          <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
+          <div className="flex gap-2 mb-4">
             {courses.map((_, i) => {
               const round = roro.rounds[i];
               const strokes = roro.strokes[i];
@@ -345,14 +338,9 @@ export default function RoroTracker() {
                 : null;
 
               return (
-                <button
+                <div
                   key={i}
-                  onClick={() => setSelectedRound(i)}
-                  className={`flex-shrink-0 rounded-xl border p-3 min-w-[120px] text-left transition-all ${
-                    effectiveRound === i
-                      ? "border-usf-green bg-usf-green/5 ring-1 ring-usf-green/20"
-                      : "border-gray-200 bg-white hover:border-gray-300"
-                  }`}
+                  className="flex-1 rounded-xl border border-gray-200 bg-white p-3 min-w-0"
                 >
                   <div className="flex items-center gap-1.5 mb-1.5">
                     <span className="text-xs font-semibold text-gray-900">
@@ -381,49 +369,59 @@ export default function RoroTracker() {
                       )}
                     </>
                   ) : (
-                    <p className="text-lg font-bold text-gray-300">–</p>
+                    <>
+                      <p className="text-lg font-bold text-gray-300">–</p>
+                      <p className="text-[11px] text-gray-300 tabular-nums mt-0.5">– strokes</p>
+                      <p className="text-[11px] text-gray-300 tabular-nums">– / –</p>
+                    </>
                   )}
-                </button>
+                </div>
               );
             })}
           </div>
         )}
 
-        {/* Hole-by-Hole Scorecard */}
+        {/* All Round Scorecards */}
         {courses.length > 0 && (
-          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-            <div className="px-4 py-2.5 border-b border-gray-100 flex items-center justify-between">
-              <span className="text-sm font-semibold text-gray-900">
-                Round {effectiveRound + 1}
-              </span>
-              {roro?.rounds[effectiveRound]?.status === "in_progress" &&
-                roro.rounds[effectiveRound]?.thru && (
-                  <span className="text-xs text-gray-400">
-                    Thru {roro.rounds[effectiveRound].thru}
-                  </span>
-                )}
-            </div>
-            {roro?.rounds[effectiveRound]?.strokes.some(
-              (s) => s !== null
-            ) ? (
-              <HoleByHole
-                round={roro.rounds[effectiveRound]}
-                course={courses[effectiveRound]}
-              />
-            ) : (
-              <div className="px-4 py-3 space-y-2 overflow-x-auto">
-                <NineHoles
-                  holes={{ start: 0, end: 9, label: "OUT" }}
-                  pars={courses[effectiveRound]?.pars ?? []}
-                  strokes={emptyStrokes}
-                />
-                <NineHoles
-                  holes={{ start: 9, end: 18, label: "IN" }}
-                  pars={courses[effectiveRound]?.pars ?? []}
-                  strokes={emptyStrokes}
-                />
-              </div>
-            )}
+          <div className="space-y-4">
+            {courses.map((course, i) => {
+              const round = roro?.rounds[i];
+              const roundIsLive = round?.status === "in_progress";
+              const hasRoundStrokes = round?.strokes.some((s) => s !== null);
+
+              return (
+                <div key={i} className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                  <div className="px-4 py-2.5 border-b border-gray-100 flex items-center justify-between">
+                    <span className="text-sm font-semibold text-gray-900">
+                      Round {i + 1}
+                    </span>
+                    {roundIsLive && round?.thru && (
+                      <span className="text-xs text-gray-400">
+                        Thru {round.thru}
+                      </span>
+                    )}
+                  </div>
+                  {hasRoundStrokes ? (
+                    <HoleByHole round={round} course={course} />
+                  ) : (
+                    <div className="px-4 py-3 space-y-2 overflow-x-auto">
+                      <NineHoles
+                        holes={{ start: 0, end: 9, label: "OUT" }}
+                        pars={course?.pars ?? []}
+                        strokes={emptyStrokes}
+                        yards={course?.yards}
+                      />
+                      <NineHoles
+                        holes={{ start: 9, end: 18, label: "IN" }}
+                        pars={course?.pars ?? []}
+                        strokes={emptyStrokes}
+                        yards={course?.yards}
+                      />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
