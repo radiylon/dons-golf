@@ -12,10 +12,8 @@ import { formatScore, scoreColor, nineHoleTotal, ordinal, getTournamentStatus } 
 import { HoleByHole, NineHoles } from "./HoleByHole";
 import LastUpdated from "./LastUpdated";
 import PageHeader from "./PageHeader";
-import PlayerTable from "./PlayerTable";
 import Link from "next/link";
 import type { Tournament, PlayerResult } from "@/lib/types";
-import { findPlayingGroup, getLatestActiveRoundIndex } from "@/lib/playingGroup";
 
 const CLASS_YEARS = ["Freshman", "Sophomore", "Junior", "Senior"] as const;
 
@@ -107,13 +105,6 @@ export default function RoroTracker() {
 
   const hasScores = roro ? roro.totalStrokes > 0 : false;
   const rankInfo = roro && hasScores ? computeRank(roro, allPlayers) : null;
-
-  // Playing group
-  const latestRoundIndex = roro ? getLatestActiveRoundIndex(roro) : 0;
-  const groupMembers = roro
-    ? findPlayingGroup(roro, allPlayers, latestRoundIndex)
-    : [];
-  const emptyRankMap = new Map<string, { rank: number; isTied: boolean }>();
 
   // Course info
   const rawCourseName = courses[0]?.courseName || "";
@@ -387,29 +378,6 @@ export default function RoroTracker() {
                 </div>
               );
             })}
-          </div>
-        )}
-
-        {/* Playing Group */}
-        {roro && groupMembers.length > 0 && (
-          <div className="mb-4">
-            <h3 className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-2">
-              Playing Group
-              <span className="text-xs font-normal text-gray-400">
-                R{latestRoundIndex + 1}
-                {roro.rounds[latestRoundIndex]?.teeTime && (
-                  <> &middot; {roro.rounds[latestRoundIndex].teeTime}</>
-                )}
-              </span>
-            </h3>
-            <PlayerTable
-              players={groupMembers}
-              courses={courses}
-              playerRankMap={emptyRankMap}
-              tableRound={latestRoundIndex}
-              showSchool
-              highlightSF
-            />
           </div>
         )}
 
