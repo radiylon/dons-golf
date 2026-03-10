@@ -36,7 +36,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="bg-gray-50 text-gray-900 antialiased">
         <Providers>
-          <div className="pb-8">{children}</div>
+          <div style={{ paddingBottom: "calc(4rem + env(safe-area-inset-bottom, 0px))" }}>{children}</div>
           <FloatingNav />
         </Providers>
       </body>
