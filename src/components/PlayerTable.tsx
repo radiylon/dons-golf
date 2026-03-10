@@ -15,12 +15,14 @@ export default function PlayerTable({
   playerRankMap,
   tableRound,
   showSchool,
+  highlightSF,
 }: {
   players: PlayerResult[];
   courses: Course[];
   playerRankMap: Map<string, { rank: number; isTied: boolean }>;
   tableRound: "total" | number;
   showSchool?: boolean;
+  highlightSF?: boolean;
 }) {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
@@ -42,20 +44,20 @@ export default function PlayerTable({
         <table className="w-full text-sm table-fixed">
           <thead>
             <tr className="border-b border-gray-100 text-gray-400 text-xs uppercase tracking-wider">
-              <th className="py-2.5 px-3 text-left font-medium">Player</th>
+              <th className="py-2.5 px-2 text-left font-medium">Player</th>
               {courses.map((_, i) => (
-                <th key={i} className="py-2.5 px-1 text-center font-medium w-10">
+                <th key={i} className="py-2.5 px-0.5 text-center font-medium w-8">
                   R{i + 1}
                 </th>
               ))}
-              <th className="py-2.5 px-1 text-center font-medium w-10">Tot</th>
-              <th className="py-2.5 px-1 text-center font-medium w-11">Score</th>
-              <th className="py-2.5 px-1 pr-3 w-13" />
+              <th className="py-2.5 px-0.5 text-center font-medium w-9">Tot</th>
+              <th className="py-2.5 px-0.5 text-center font-medium w-11">Score</th>
+              <th className="py-2.5 px-0.5 pr-2 w-11" />
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
             {players.map((player) => {
-              const isSF = !!showSchool && player.schoolId === SF_SCHOOL_ID;
+              const isSF = !!highlightSF && player.schoolId === SF_SCHOOL_ID;
               const hasScores = player.totalStrokes > 0;
               const rankInfo = playerRankMap.get(player.playerId);
               const rank = rankInfo?.rank ?? 0;
@@ -72,7 +74,7 @@ export default function PlayerTable({
                         : isExpanded ? "bg-gray-50" : "hover:bg-gray-50"
                     }`}
                   >
-                    <td className="py-2.5 px-3 overflow-hidden">
+                    <td className="py-2.5 px-2 overflow-hidden">
                       <PlayerCell player={player} showSchool={showSchool} isSF={isSF} />
                     </td>
                     {courses.map((_, i) => {
@@ -80,23 +82,23 @@ export default function PlayerTable({
                       return (
                         <td
                           key={i}
-                          className={`py-2.5 px-1 text-center text-xs tabular-nums ${strokes > 0 ? "text-gray-600" : "text-gray-300"}`}
+                          className={`py-2.5 px-0.5 text-center text-xs tabular-nums ${strokes > 0 ? "text-gray-600" : "text-gray-300"}`}
                         >
                           {strokes > 0 ? strokes : "–"}
                         </td>
                       );
                     })}
-                    <td className="py-2.5 px-1 text-center text-xs tabular-nums font-semibold text-gray-600">
+                    <td className="py-2.5 px-0.5 text-center text-xs tabular-nums font-semibold text-gray-600">
                       {hasScores ? player.totalStrokes : "–"}
                     </td>
                     <td
-                      className={`py-2.5 px-1 text-center text-xs tabular-nums font-semibold ${
+                      className={`py-2.5 px-0.5 text-center text-xs tabular-nums font-semibold ${
                         hasScores ? scoreColor(player.totalScore) : "text-gray-300"
                       }`}
                     >
                       {hasScores ? formatScore(player.totalScore) : "–"}
                     </td>
-                    <td className="py-2.5 px-1 pr-3 text-center text-xs tabular-nums text-gray-500">
+                    <td className="py-2.5 px-0.5 pr-2 text-center text-xs tabular-nums text-gray-500">
                       {rank > 0
                         ? `${isTied ? "T" : ""}${ordinal(rank)}`
                         : "–"}
@@ -128,16 +130,16 @@ export default function PlayerTable({
       <table className="w-full text-sm table-fixed">
         <thead>
           <tr className="border-b border-gray-100 text-gray-400 text-xs uppercase tracking-wider">
-            <th className="py-2.5 px-3 text-left font-medium">Player</th>
-            <th className="py-2.5 px-1 text-center font-medium w-16">Out</th>
-            <th className="py-2.5 px-1 text-center font-medium w-16">In</th>
-            <th className="py-2.5 px-1 text-center font-medium w-16">Tot</th>
-            <th className="py-2.5 px-1 pr-3 text-center font-medium w-16">Score</th>
+            <th className="py-2.5 px-2 text-left font-medium">Player</th>
+            <th className="py-2.5 px-0.5 text-center font-medium w-12">Out</th>
+            <th className="py-2.5 px-0.5 text-center font-medium w-12">In</th>
+            <th className="py-2.5 px-0.5 text-center font-medium w-12">Tot</th>
+            <th className="py-2.5 px-0.5 pr-2 text-center font-medium w-12">Score</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-50">
           {players.map((player) => {
-            const isSF = !!showSchool && player.schoolId === SF_SCHOOL_ID;
+            const isSF = !!highlightSF && player.schoolId === SF_SCHOOL_ID;
             const round = player.rounds[roundIndex];
             const strokes = player.strokes[roundIndex];
             const score = player.scores?.[roundIndex];
@@ -155,20 +157,20 @@ export default function PlayerTable({
                       : isExpanded ? "bg-gray-50" : "hover:bg-gray-50"
                   }`}
                 >
-                  <td className="py-2.5 px-3 overflow-hidden">
+                  <td className="py-2.5 px-2 overflow-hidden">
                     <PlayerCell player={player} showSchool={showSchool} isSF={isSF} />
                   </td>
-                  <td className="py-2.5 px-1 text-center text-xs tabular-nums text-gray-600">
+                  <td className="py-2.5 px-0.5 text-center text-xs tabular-nums text-gray-600">
                     {front ?? "–"}
                   </td>
-                  <td className="py-2.5 px-1 text-center text-xs tabular-nums text-gray-600">
+                  <td className="py-2.5 px-0.5 text-center text-xs tabular-nums text-gray-600">
                     {back ?? "–"}
                   </td>
-                  <td className="py-2.5 px-1 text-center text-xs tabular-nums text-gray-600">
+                  <td className="py-2.5 px-0.5 text-center text-xs tabular-nums text-gray-600">
                     {strokes > 0 ? strokes : "–"}
                   </td>
                   <td
-                    className={`py-2.5 px-1 pr-3 text-center text-xs tabular-nums font-semibold ${
+                    className={`py-2.5 px-0.5 pr-2 text-center text-xs tabular-nums font-semibold ${
                       score != null && strokes > 0 ? scoreColor(score) : "text-gray-300"
                     }`}
                   >

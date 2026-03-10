@@ -272,6 +272,7 @@ export default function Scoreboard({
             courses={courses}
             playerRankMap={playerRankMap}
             showSchool
+            highlightSF
           />
         )}
 

@@ -9,11 +9,13 @@ export default function PlayerTableSection({
   courses,
   playerRankMap,
   showSchool,
+  highlightSF,
 }: {
   players: PlayerResult[];
   courses: Course[];
   playerRankMap: Map<string, { rank: number; isTied: boolean }>;
   showSchool?: boolean;
+  highlightSF?: boolean;
 }) {
   const [tableRound, setTableRound] = useState<"total" | number>("total");
 
@@ -51,6 +53,7 @@ export default function PlayerTableSection({
         playerRankMap={playerRankMap}
         tableRound={tableRound}
         showSchool={showSchool}
+        highlightSF={highlightSF}
       />
     </div>
   );
