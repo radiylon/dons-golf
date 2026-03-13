@@ -1,6 +1,6 @@
 "use client";
 
-import { useTournaments, usePlayerLeaderboard } from "@/lib/hooks";
+import { usePlayerLeaderboard, useTournaments } from "@/lib/hooks";
 import {
   SF_SCHOOL_ID,
   RORO_PLAYER_NAME,
