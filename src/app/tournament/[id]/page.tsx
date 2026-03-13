@@ -4,10 +4,7 @@ import {
   QueryClient,
 } from "@tanstack/react-query";
 import Scoreboard from "@/components/Scoreboard";
-import {
-  fetchTeamLeaderboardServer,
-  fetchPlayerLeaderboardServer,
-} from "@/lib/api";
+import { fetchTeamLeaderboardServer } from "@/lib/api";
 
 export default async function TournamentPage({
   params,
@@ -18,19 +15,12 @@ export default async function TournamentPage({
 
   const queryClient = new QueryClient();
 
-  // Only prefetch team + player data (fast, 1 call each).
-  // Tournaments list loads client-side — it's only used for the name/date
-  // and would otherwise gate the page behind 6 Clippd API calls.
-  await Promise.all([
-    queryClient.prefetchQuery({
-      queryKey: ["team-leaderboard", id],
-      queryFn: () => fetchTeamLeaderboardServer(id),
-    }),
-    queryClient.prefetchQuery({
-      queryKey: ["player-leaderboard", id],
-      queryFn: () => fetchPlayerLeaderboardServer(id),
-    }),
-  ]);
+  // Only prefetch team data on the server (shown on the default tab).
+  // Player data loads eagerly client-side without blocking initial render.
+  await queryClient.prefetchQuery({
+    queryKey: ["team-leaderboard", id],
+    queryFn: () => fetchTeamLeaderboardServer(id),
+  });
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
