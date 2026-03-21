@@ -8,6 +8,7 @@ export function useTeamLeaderboard(tournamentId: string) {
   return useQuery({
     queryKey: ["team-leaderboard", tournamentId],
     queryFn: () => fetchTeamLeaderboard(tournamentId),
+    staleTime: POLL_INTERVAL_MS,
     select: (data) => ({
       ...data,
       results: [...data.results].sort((a, b) => {
