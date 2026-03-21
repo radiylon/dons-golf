@@ -1,11 +1,10 @@
+"use client";
+
+import { useParams } from "next/navigation";
 import Scoreboard from "@/components/Scoreboard";
 
-export default async function TournamentPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
+export default function TournamentPage() {
+  const { id } = useParams<{ id: string }>();
 
   return (
     <main className="min-h-screen pb-8">
