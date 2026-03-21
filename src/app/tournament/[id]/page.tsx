@@ -4,7 +4,7 @@ import {
   QueryClient,
 } from "@tanstack/react-query";
 import Scoreboard from "@/components/Scoreboard";
-import { fetchTeamLeaderboardServer } from "@/lib/api";
+import { fetchTeamLeaderboardServer, fetchTournamentsServer } from "@/lib/api";
 
 export default async function TournamentPage({
   params,
@@ -15,12 +15,16 @@ export default async function TournamentPage({
 
   const queryClient = new QueryClient();
 
-  // Only prefetch team data on the server (shown on the default tab).
-  // Player data loads eagerly client-side without blocking initial render.
-  await queryClient.prefetchQuery({
-    queryKey: ["team-leaderboard", id],
-    queryFn: () => fetchTeamLeaderboardServer(id),
-  });
+  await Promise.all([
+    queryClient.prefetchQuery({
+      queryKey: ["team-leaderboard", id],
+      queryFn: () => fetchTeamLeaderboardServer(id),
+    }),
+    queryClient.prefetchQuery({
+      queryKey: ["tournaments"],
+      queryFn: fetchTournamentsServer,
+    }),
+  ]);
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>

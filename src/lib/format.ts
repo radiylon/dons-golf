@@ -32,6 +32,34 @@ export function ordinal(n: number): string {
   }
 }
 
+export function formatDateRange(start: string, end: string): string {
+  const startDate = new Date(start + "T00:00:00");
+  const endDate = new Date(end + "T00:00:00");
+  const opts: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
+
+  if (startDate.getMonth() === endDate.getMonth()) {
+    return `${startDate.toLocaleDateString("en-US", opts)}–${endDate.getDate()}, ${startDate.getFullYear()}`;
+  }
+  return `${startDate.toLocaleDateString("en-US", opts)} – ${endDate.toLocaleDateString("en-US", opts)}, ${startDate.getFullYear()}`;
+}
+
+export function formatTimeAgo(timestamp: number): string {
+  if (timestamp === 0) return "";
+  const seconds = Math.floor((Date.now() - timestamp) / 1000);
+
+  if (seconds < 5) return "just now";
+  if (seconds < 60) return `${seconds}s ago`;
+
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
+
 export type TournamentStatus = "live" | "upcoming" | "completed";
 
 export function getTournamentStatus(t: {

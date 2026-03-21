@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import type { PlayerResult, Course } from "@/lib/types";
-import { HoleByHole } from "./HoleByHole";
+import HoleByHole from "./HoleByHole";
 
 export default function ExpandedScorecard({
   player,

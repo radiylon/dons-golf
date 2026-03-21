@@ -1,18 +1,7 @@
 import { TOURNAMENT_NAME_OVERRIDES } from "@/lib/constants";
-import { type TournamentStatus } from "@/lib/format";
+import { type TournamentStatus, formatDateRange } from "@/lib/format";
 import type { Tournament } from "@/lib/types";
 import Link from "next/link";
-
-function formatDateRange(start: string, end: string): string {
-  const startDate = new Date(start + "T00:00:00");
-  const endDate = new Date(end + "T00:00:00");
-  const opts: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
-
-  if (startDate.getMonth() === endDate.getMonth()) {
-    return `${startDate.toLocaleDateString("en-US", opts)}–${endDate.getDate()}, ${startDate.getFullYear()}`;
-  }
-  return `${startDate.toLocaleDateString("en-US", opts)} – ${endDate.toLocaleDateString("en-US", opts)}, ${startDate.getFullYear()}`;
-}
 
 function StatusBadge({ status }: { status: TournamentStatus }) {
   if (status === "live") {

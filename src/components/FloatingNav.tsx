@@ -6,20 +6,7 @@ import { usePathname } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTournaments } from "@/lib/hooks";
 import { fetchTeamLeaderboard, fetchPlayerLeaderboard } from "@/lib/api";
-import { getTournamentStatus } from "@/lib/format";
-import type { Tournament } from "@/lib/types";
-
-function getActiveTournamentId(tournaments: Tournament[]): string | null {
-  const withResults = tournaments.filter((t) => t.hasResults);
-
-  const live = withResults.find((t) => getTournamentStatus(t) === "live");
-  if (live) return live.tournamentId;
-
-  const completed = withResults
-    .filter((t) => getTournamentStatus(t) === "completed")
-    .sort((a, b) => b.endDate.localeCompare(a.endDate));
-  return completed[0]?.tournamentId ?? null;
-}
+import { getActiveTournament } from "@/lib/tournaments";
 
 const items = [
   { key: "home", href: "/", label: "Home", match: (p: string) => p === "/" },
@@ -102,7 +89,7 @@ export default function FloatingNav() {
   const queryClient = useQueryClient();
   const { data } = useTournaments();
   const tournaments = data?.results ?? [];
-  const activeTournamentId = getActiveTournamentId(tournaments);
+  const activeTournamentId = getActiveTournament(tournaments)?.id ?? null;
 
   const itemRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
   const [pill, setPill] = useState<{ left: number; width: number } | null>(null);
